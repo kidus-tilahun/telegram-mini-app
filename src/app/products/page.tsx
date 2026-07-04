@@ -1,11 +1,10 @@
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
-import type { Product } from "@/types/product";
 
 export default async function ProductsPage() {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`*, categories (name)`)
     .eq("featured", true);
 
   if (error) {

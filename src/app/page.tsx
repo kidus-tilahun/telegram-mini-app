@@ -6,7 +6,7 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 export default async function Home() {
   const [storeResult, productsResult] = await Promise.all([
     supabase.from("store_settings").select("*").single(),
-    supabase.from("products").select("*"),
+    supabase.from("products").select(`*, categories (name)`),
   ]);
 
   const { data: store, error: storeError } = storeResult;
