@@ -16,37 +16,37 @@ export type Database = {
     Tables: {
       products: {
         Row: {
-          category: string | null
+          category: string
           created_at: string
           featured: boolean
           id: string
-          image: string | null
-          name: string | null
-          price: number | null
-          status: string | null
-          stock: number | null
+          image: string
+          name: string
+          price: number
+          status: string
+          stock: number
         }
         Insert: {
-          category?: string | null
+          category: string
           created_at?: string
           featured?: boolean
           id?: string
-          image?: string | null
-          name?: string | null
-          price?: number | null
-          status?: string | null
-          stock?: number | null
+          image: string
+          name: string
+          price: number
+          status?: string
+          stock?: number
         }
         Update: {
-          category?: string | null
+          category?: string
           created_at?: string
           featured?: boolean
           id?: string
-          image?: string | null
-          name?: string | null
-          price?: number | null
-          status?: string | null
-          stock?: number | null
+          image?: string
+          name?: string
+          price?: number
+          status?: string
+          stock?: number
         }
         Relationships: []
       }
