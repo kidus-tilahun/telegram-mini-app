@@ -8,10 +8,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   return (
-    <Link
-      href={`/products/${product.id}`}
-      className="group flex flex-col gap-2.5"
-    >
+    <Link href={`/shop/${product.id}`} className="group flex flex-col gap-2.5">
       <article className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted shadow-[var(--shadow-soft)]">
         <Image
           src={product.image}

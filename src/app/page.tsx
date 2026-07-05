@@ -4,7 +4,8 @@ import HeroBanner from "@/components/HeroBanner";
 import ProductSection from "@/components/ProductSection";
 import CategoryChips from "@/components/CategoryChips";
 import PromoBanner from "@/components/PromoBanner";
-import CTA from "@/components/CTA";
+import MembershipBanner from "@/components/MembershipBanner";
+import BottomNavigation from "@/components/BottomNavigation";
 
 export default async function Home() {
   const [storeResult, productsResult, categoriesResult] = await Promise.all([
@@ -25,12 +26,13 @@ export default async function Home() {
       <Header store={store} />
       <HeroBanner heroImageUrl={store.hero_image_url} />
       <CategoryChips categories={categories} />
-      <PromoBanner imageUrl="https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
+      <PromoBanner imageUrl={store.promo_image_url} />
       {/* New arrivals */}
       <ProductSection title="New Arrivals" products={products} />
       {/* Popular this week */}
       <ProductSection title="Popular This Week" products={products} />
-      <CTA />
+      <MembershipBanner />
+      <BottomNavigation />
     </main>
   );
 }

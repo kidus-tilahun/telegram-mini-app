@@ -82,6 +82,7 @@ export type Database = {
           hero_image_url: string
           id: string
           logo_url: string
+          promo_image_url: string
           store_name: string
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           hero_image_url: string
           id?: string
           logo_url: string
+          promo_image_url: string
           store_name: string
         }
         Update: {
@@ -96,6 +98,7 @@ export type Database = {
           hero_image_url?: string
           id?: string
           logo_url?: string
+          promo_image_url?: string
           store_name?: string
         }
         Relationships: []

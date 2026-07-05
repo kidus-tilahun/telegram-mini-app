@@ -11,7 +11,7 @@ export default function CategoryChips({ categories }: CategoryChipsProps) {
       <div className="mb-3 flex items-end justify-between">
         <h2 className="font-display text-xl text-foreground">Categories</h2>
         <Link
-          href="/products"
+          href="/shop"
           className="text-xs font-medium text-muted-foreground"
         >
           See all
@@ -21,7 +21,7 @@ export default function CategoryChips({ categories }: CategoryChipsProps) {
         {categories.slice(1).map((category) => (
           <Link
             key={category.id}
-            href="/products"
+            href="/shop"
             className="shrink-0 rounded-full border border-border bg-surface-elevated px-4 py-2 text-sm text-foreground transition-colors active:bg-muted"
           >
             {category.name}

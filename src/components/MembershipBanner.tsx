@@ -1,7 +1,7 @@
-export default function CTA() {
+export default function MembershipBanner() {
   return (
     <section className="mt-8 px-5">
-      <div className="rounded-3xl bg-primary p-6 text-primary-foreground">
+      <div className="rounded-3xl bg-green-300 p-6 text-primary-foreground">
         <p className="text-[10px] uppercase tracking-[0.18em] text-primary-foreground/70">
           Members
         </p>
