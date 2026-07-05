@@ -28,7 +28,11 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
 
   return (
     <section className="mt-5">
-      <div className="flex gap-2 overflow-x-auto px-5">
+      <div
+        className="no-scrollbar flex gap-2 overflow-x-auto px-5"
+        role="tablist"
+        aria-label="categories"
+      >
         <button
           onClick={() => handleCategory("All")}
           className={

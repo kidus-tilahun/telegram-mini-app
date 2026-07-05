@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import CategoryFilter from "@/components/CategoryFilter";
+import SearchBar from "@/components/SearchBar";
 
 interface ShopPageProps {
   searchParams: Promise<{
@@ -18,7 +19,10 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   // we will write this after wiring category slugs/names
   if (category) {
-    // TODO
+    let query = supabase
+      .from("products")
+      .select(`*, categories!inner(id,name)`);
+    query = query.eq("categories.name", category);
   }
 
   query = query.order("created_at", { ascending: false });
@@ -37,11 +41,16 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const safeProducts = products ?? [];
   const safeCategories = categories ?? [];
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <>
+      <SearchBar />
       <CategoryFilter categories={safeCategories} />
-      {safeProducts?.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
+      <section className="mt-3 px-5">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-5 animate-fade-up">
+          {safeProducts?.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+    </>
   );
 }
