@@ -1,4 +1,3 @@
-import { supabase } from "@/lib/supabase";
 import Header from "@/components/Header";
 import HeroBanner from "@/components/HeroBanner";
 import ProductSection from "@/components/ProductSection";
@@ -6,19 +5,29 @@ import CategoryChips from "@/components/CategoryChips";
 import PromoBanner from "@/components/PromoBanner";
 import MembershipBanner from "@/components/MembershipBanner";
 import BottomNavigation from "@/components/BottomNavigation";
+import { getProducts } from "@/lib/repositories/products";
+import { getStore } from "@/lib/repositories/store";
+import { getCategories } from "@/lib/repositories/categories";
 
 export default async function Home() {
-  const [storeResult, productsResult, categoriesResult] = await Promise.all([
-    supabase.from("store_settings").select("*").single(),
-    supabase.from("products").select("*").eq("featured", true),
-    supabase.from("categories").select("*").order("name"),
+  const [
+    { data: store, error: storeError },
+    { data: categories, error: categoriesError },
+    { data: featuredProducts, error: featuredProductsError },
+    { data: newArrivals, error: newArrivalsError },
+  ] = await Promise.all([
+    getStore(),
+    getCategories(),
+    getProducts({ featured: true, limit: 8 }),
+    getProducts({ limit: 8 }),
   ]);
 
-  const { data: store, error: storeError } = storeResult;
-  const { data: categories, error: categoriesError } = categoriesResult;
-  const { data: products, error: productsError } = productsResult;
-
-  if (storeError || productsError || categoriesError) {
+  if (
+    storeError ||
+    categoriesError ||
+    featuredProductsError ||
+    newArrivalsError
+  ) {
     return <p>Failed to load data.</p>;
   }
   return (
@@ -28,9 +37,12 @@ export default async function Home() {
       <CategoryChips categories={categories} />
       <PromoBanner imageUrl={store.promo_image_url} />
       {/* New arrivals */}
-      <ProductSection title="New Arrivals" products={products} />
+      <ProductSection title="New Arrivals" products={newArrivals ?? []} />
       {/* Popular this week */}
-      <ProductSection title="Popular This Week" products={products} />
+      <ProductSection
+        title="Popular This Week"
+        products={featuredProducts ?? []}
+      />
       <MembershipBanner />
       <BottomNavigation />
     </main>

@@ -7,7 +7,7 @@ interface ProductSectionProps {
   products: Product[];
 }
 
-export default function FeaturedProducts({
+export default function ProductSection({
   title,
   products,
 }: ProductSectionProps) {
@@ -16,7 +16,7 @@ export default function FeaturedProducts({
       <div className="mb-3 flex items-end justify-between">
         <h2 className="font-display text-xl text-foreground">{title}</h2>
         <Link
-          href="/products"
+          href="/shop"
           className="text-xs font-medium text-muted-foreground"
         >
           View all

@@ -1,7 +1,13 @@
-import { supabase } from "@/lib/supabase";
 import ProductCard from "@/components/ProductCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
+
+import {
+  getProducts,
+  getProductsByCategory,
+} from "@/lib/repositories/products";
+
+import { getCategories } from "@/lib/repositories/categories";
 
 interface ShopPageProps {
   searchParams: Promise<{
@@ -12,41 +18,32 @@ interface ShopPageProps {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const { q, category } = await searchParams;
-  let query = supabase.from("products").select("*");
-  if (q) {
-    query = query.ilike("name", `%${q}%`);
-  }
-
-  // we will write this after wiring category slugs/names
-  if (category) {
-    let query = supabase
-      .from("products")
-      .select(`*, categories!inner(id,name)`);
-    query = query.eq("categories.name", category);
-  }
-
-  query = query.order("created_at", { ascending: false });
 
   const [
     { data: products, error: productsError },
     { data: categories, error: categoriesError },
   ] = await Promise.all([
-    query,
-    supabase.from("categories").select("*").order("name"),
+    category ? getProductsByCategory(category) : getProducts({ search: q }),
+    getCategories(),
   ]);
 
   if (productsError || categoriesError) {
-    return <div>Failed to load shop.</div>;
+    return (
+      <main className="p-5">
+        <p>Unable to load products.</p>
+      </main>
+    );
   }
-  const safeProducts = products ?? [];
-  const safeCategories = categories ?? [];
+
   return (
     <>
       <SearchBar />
-      <CategoryFilter categories={safeCategories} />
+
+      <CategoryFilter categories={categories ?? []} />
+
       <section className="mt-3 px-5">
         <div className="grid grid-cols-2 gap-x-3 gap-y-5 animate-fade-up">
-          {safeProducts?.map((product) => (
+          {(products ?? []).map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
