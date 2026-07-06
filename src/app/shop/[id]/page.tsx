@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/supabase";
+import ProductDetails from "@/components/ProductDetails";
+import RelatedProducts from "@/components/RelatedProducts";
+import { getProductById } from "@/lib/repositories/products";
 
 interface ProductPageProps {
   params: Promise<{
@@ -9,18 +11,18 @@ interface ProductPageProps {
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
 
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data: product, error } = await getProductById(id);
 
   if (error || !product) {
     return <h1>Product not found</h1>;
   }
   return (
     <main>
-      <h1>{product.name}</h1>
+      <ProductDetails product={product} />
+      <RelatedProducts
+        categoryId={product.category_id}
+        currentProductId={product.id}
+      />
     </main>
   );
 }

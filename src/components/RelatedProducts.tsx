@@ -20,10 +20,9 @@ export default async function RelatedProducts({
   }
 
   return (
-    <section className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Related Products</h2>
-
-      <div className="grid grid-cols-2 gap-4">
+    <section className="mt-10">
+      <h2 className="font-display text-xl">You may also like</h2>
+      <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-5">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
