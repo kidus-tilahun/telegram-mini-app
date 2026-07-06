@@ -1,14 +1,30 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/types/product";
 import QuantitySelector from "./QuantitySelector";
+import Link from "next/link";
+import AddToCartButton from "./AddToCartButton";
 
 interface ProductDetailsProps {
   product: Product;
 }
 
 export default function ProductDetails({ product }: ProductDetailsProps) {
+  const [quantity, setQuantity] = useState(1);
+
+  function increase() {
+    setQuantity((q) => q + 1);
+  }
+
+  function decrease() {
+    setQuantity((q) => Math.max(1, q - 1));
+  }
   return (
     <section className="relative -mt-2">
+      <header className="flex items-center p-5">
+        <Link href="/shop">← Back</Link>
+      </header>
       <Image
         src={product.image}
         alt={product.name}
@@ -41,27 +57,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           )}
         </div>
 
-        <QuantitySelector />
+        <QuantitySelector
+          quantity={quantity}
+          increase={increase}
+          decrease={decrease}
+        />
+        <AddToCartButton productId={product.id} quantity={quantity} />
       </article>
-
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
-        <div className="glass-nav flex items-center gap-3 rounded-full p-2 pl-5 shadow-[var(--shadow-float)]">
-          <div className="flex-1">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Total
-            </p>
-            <p className="font-display text-lg leading-none text-foreground">
-              ${product.price.toLocaleString()}
-            </p>
-          </div>
-          <button
-            disabled={product.stock === 0}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-slate-600 px-6 text-sm font-medium text-primary-foreground transition-transform active:scale-95 disabled:opacity-50"
-          >
-            Add to Cart
-          </button>
-        </div>
-      </div>
     </section>
   );
 }

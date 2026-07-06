@@ -36,7 +36,7 @@ export default function Header({ store }: HeaderProps) {
       <Link
         href="/products"
         aria-label="Search products"
-        className="grid h-11 w-11 place-items-center rounded-full bg-surface-elevated text-foreground shadow-[var(--shadow-soft)]"
+        className="grid h-11 w-11 place-items-center rounded-full bg-slate-200 text-foreground shadow-[var(--shadow-soft)]"
       >
         <Search size={18} strokeWidth={1.8} />
       </Link>

@@ -1,17 +1,18 @@
 "use client";
-import { useState } from "react";
 import { Minus } from "lucide-react";
 import { Plus } from "lucide-react";
 
-export default function QuantitySelector() {
-  const [quantity, setQuantity] = useState(1);
-  function increase() {
-    setQuantity((q) => q + 1);
-  }
-  function decrease() {
-    setQuantity((q) => Math.max(1, q - 1));
-  }
+interface QuantitySelectorProps {
+  quantity: number;
+  increase: () => void;
+  decrease: () => void;
+}
 
+export default function QuantitySelector({
+  quantity,
+  increase,
+  decrease,
+}: QuantitySelectorProps) {
   return (
     <div>
       <section className="mt-6">
