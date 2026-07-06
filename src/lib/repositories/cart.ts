@@ -1,9 +1,29 @@
 import { supabase } from "../supabase";
 
 export async function addToCart(productId: string, quantity: number) {
-  return supabase
+  const { data: existingItem, error } = await supabase
     .from("cart_items")
-    .insert({ product_id: productId, quantity });
+    .select("*")
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  if (error) {
+    return { error };
+  }
+
+  if (existingItem) {
+    return supabase
+      .from("cart_items")
+      .update({
+        quantity: existingItem.quantity + quantity,
+      })
+      .eq("id", existingItem.id);
+  }
+
+  return supabase.from("cart_items").insert({
+    product_id: productId,
+    quantity,
+  });
 }
 
 export async function getCartItems() {
