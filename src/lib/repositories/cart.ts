@@ -27,7 +27,16 @@ export async function addToCart(productId: string, quantity: number) {
 }
 
 export async function getCartItems() {
-  return supabase.from("cart_items").select(`*, products(*)`);
+  return supabase.from("cart_items").select(`
+    id,
+    quantity,
+    products (
+      id,
+      name,
+      image,
+      price
+    )
+  `);
 }
 
 export async function removeFromCart(id: string) {
