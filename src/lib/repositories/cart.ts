@@ -39,6 +39,14 @@ export async function getCartItems() {
   `);
 }
 
+export async function getCartItemByProductId(productId: string) {
+  return supabase
+    .from("cart_items")
+    .select("*")
+    .eq("product_id", productId)
+    .maybeSingle();
+}
+
 export async function removeFromCart(id: string) {
   return supabase.from("cart_items").delete().eq("id", id);
 }
