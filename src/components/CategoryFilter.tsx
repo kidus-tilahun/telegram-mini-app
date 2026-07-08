@@ -47,9 +47,9 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
         {categories.map((category) => (
           <button
             key={category.id}
-            onClick={() => handleCategory(category.name)}
+            onClick={() => handleCategory(category.id)}
             className={
-              active === category.name
+              active === category.id
                 ? "rounded-full bg-primary px-4 py-2 text-primary-foreground"
                 : "rounded-full border px-4 py-2"
             }
