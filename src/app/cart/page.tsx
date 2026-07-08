@@ -1,5 +1,5 @@
 import { getCartItems } from "@/lib/repositories/cart";
-import CartItem from "@/components/CartItem";
+import CartList from "@/components/CartList";
 import EmptyCart from "@/components/EmptyCart";
 import CartSummary from "@/components/CartSummary";
 
@@ -14,17 +14,13 @@ export default async function CartPage() {
 
   return (
     <main>
-      {/* header */}
+      {/* Header */}
 
       {cartItems.length === 0 ? (
         <EmptyCart />
       ) : (
         <>
-          <section className="space-y-3 px-5">
-            {cartItems.map((item) => (
-              <CartItem key={item.id} item={item} />
-            ))}
-          </section>
+          <CartList items={cartItems} />
 
           <CartSummary items={cartItems} />
         </>
