@@ -5,12 +5,16 @@ interface CartSummaryProps {
 }
 
 export default function CartSummary({ items }: CartSummaryProps) {
+  const FREE_SHIPPING_THRESHOLD = 150;
+  const SHIPPING_COST = 12;
+
   const subtotal = items.reduce(
     (sum, item) => sum + item.products.price * item.quantity,
     0,
   );
 
-  const shipping = subtotal === 0 || subtotal > 150 ? 0 : 12;
+  const shipping =
+    subtotal === 0 || subtotal > FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
 
   const total = subtotal + shipping;
 
