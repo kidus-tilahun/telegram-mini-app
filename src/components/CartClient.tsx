@@ -71,15 +71,17 @@ export default function CartClient({ items }: CartClientProps) {
 
   return (
     <>
-      <CartList
-        items={optimisticItems}
-        onIncrease={(item) => changeQuantity(item, item.quantity + 1)}
-        onDecrease={(item) => changeQuantity(item, item.quantity - 1)}
-        onDelete={deleteItem}
-        disabled={isPending}
-      />
+      <div className="pb-28">
+        <CartList
+          items={optimisticItems}
+          onIncrease={(item) => changeQuantity(item, item.quantity + 1)}
+          onDecrease={(item) => changeQuantity(item, item.quantity - 1)}
+          onDelete={deleteItem}
+          disabled={isPending}
+        />
 
-      <CartSummary items={optimisticItems} />
+        <CartSummary items={optimisticItems} />
+      </div>
     </>
   );
 }

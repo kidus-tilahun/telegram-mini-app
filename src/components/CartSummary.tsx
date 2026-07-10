@@ -1,4 +1,5 @@
 import type { CartItem } from "@/types/cart";
+import StickyCheckout from "./StickyCheckout";
 
 interface CartSummaryProps {
   items: CartItem[];
@@ -41,9 +42,7 @@ export default function CartSummary({ items }: CartSummaryProps) {
         </div>
       </div>
 
-      <button className="mt-5 w-full rounded-full bg-primary py-4 text-primary-foreground">
-        Checkout
-      </button>
+      <StickyCheckout total={total} />
     </section>
   );
 }
