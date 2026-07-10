@@ -8,6 +8,7 @@ import {
 } from "@/lib/repositories/products";
 
 import { getCategories } from "@/lib/repositories/categories";
+import BottomNavigation from "@/components/BottomNavigation";
 
 interface ShopPageProps {
   searchParams: Promise<{
@@ -48,6 +49,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           ))}
         </div>
       </section>
+      <BottomNavigation />
     </>
   );
 }

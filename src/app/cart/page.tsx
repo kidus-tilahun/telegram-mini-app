@@ -2,6 +2,7 @@ import { getCartItems } from "@/lib/repositories/cart";
 
 import EmptyCart from "@/components/EmptyCart";
 import CartClient from "@/components/CartClient";
+import BottomNavigation from "@/components/BottomNavigation";
 
 export default async function CartPage() {
   const { data: items, error } = await getCartItems();
@@ -19,6 +20,7 @@ export default async function CartPage() {
       ) : (
         <CartClient items={cartItems} />
       )}
+      <BottomNavigation />
     </main>
   );
 }
