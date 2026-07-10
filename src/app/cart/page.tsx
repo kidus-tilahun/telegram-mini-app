@@ -1,7 +1,7 @@
 import { getCartItems } from "@/lib/repositories/cart";
-import CartList from "@/components/CartList";
+
 import EmptyCart from "@/components/EmptyCart";
-import CartSummary from "@/components/CartSummary";
+import CartClient from "@/components/CartClient";
 
 export default async function CartPage() {
   const { data: items, error } = await getCartItems();
@@ -14,16 +14,10 @@ export default async function CartPage() {
 
   return (
     <main>
-      {/* Header */}
-
       {cartItems.length === 0 ? (
         <EmptyCart />
       ) : (
-        <>
-          <CartList items={cartItems} />
-
-          <CartSummary items={cartItems} />
-        </>
+        <CartClient items={cartItems} />
       )}
     </main>
   );
