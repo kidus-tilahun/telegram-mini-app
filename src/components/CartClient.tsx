@@ -75,7 +75,7 @@ export default function CartClient({ items }: CartClientProps) {
 
   return (
     <>
-      <div className="pb-28">
+      <div className="pb-36">
         <CartList
           items={optimisticItems}
           onIncrease={(item) => changeQuantity(item, item.quantity + 1)}

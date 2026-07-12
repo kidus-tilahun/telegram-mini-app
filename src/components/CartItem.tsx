@@ -41,7 +41,7 @@ export default function CartItem({
           <button
             disabled={disabled}
             onClick={onDelete}
-            className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-destructive disabled:opacity-50"
+            className="rounded-full p-2 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 size={16} />
           </button>
@@ -52,7 +52,7 @@ export default function CartItem({
             <button
               disabled={disabled}
               onClick={onDecrease}
-              className="grid h-9 w-9 place-items-center disabled:opacity-50"
+              className="h-8 w-8 rounded-full border transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Minus size={14} />
             </button>
@@ -64,7 +64,7 @@ export default function CartItem({
             <button
               disabled={disabled}
               onClick={onIncrease}
-              className="grid h-9 w-9 place-items-center disabled:opacity-50"
+              className="h-8 w-8 rounded-full border transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={14} />
             </button>

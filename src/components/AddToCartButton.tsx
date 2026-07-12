@@ -27,9 +27,16 @@ export default function AddToCartButton({
         <button
           disabled={isPending}
           onClick={handleAddToCart}
-          className="inline-flex h-12 items-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
         >
-          {isPending ? "Adding..." : "Add to Cart"}
+          {isPending ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Adding...
+            </>
+          ) : (
+            "Add to Cart"
+          )}
         </button>
       </div>
     </div>
