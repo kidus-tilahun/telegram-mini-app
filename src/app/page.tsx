@@ -8,8 +8,10 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { getProducts } from "@/lib/repositories/products";
 import { getStore } from "@/lib/repositories/store";
 import { getCategories } from "@/lib/repositories/categories";
+import { getCartCount } from "@/lib/repositories/cart";
 
 export default async function Home() {
+  const { count } = await getCartCount();
   const [
     { data: store, error: storeError },
     { data: categories, error: categoriesError },
@@ -44,7 +46,7 @@ export default async function Home() {
         products={featuredProducts ?? []}
       />
       <MembershipBanner />
-      <BottomNavigation />
+      <BottomNavigation cartCount={count} />
     </main>
   );
 }

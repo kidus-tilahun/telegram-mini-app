@@ -1,6 +1,7 @@
 "use client";
 import { useTransition } from "react";
 import { addToCartAction } from "@/app/actions/cart";
+import { useRouter } from "next/navigation";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -12,10 +13,12 @@ export default function AddToCartButton({
   quantity,
 }: AddToCartButtonProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
     startTransition(async () => {
       await addToCartAction(productId, quantity);
+      router.refresh();
     });
   }
   return (

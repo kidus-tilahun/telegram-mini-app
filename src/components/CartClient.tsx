@@ -4,6 +4,7 @@ import { useOptimistic, useTransition } from "react";
 
 import CartList from "./CartList";
 import CartSummary from "./CartSummary";
+import { useRouter } from "next/navigation";
 
 import { updateQuantityAction, removeFromCartAction } from "@/app/actions/cart";
 
@@ -26,6 +27,7 @@ type CartAction =
 
 export default function CartClient({ items }: CartClientProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const [optimisticItems, updateOptimisticItems] = useOptimistic(
     items,
@@ -55,6 +57,7 @@ export default function CartClient({ items }: CartClientProps) {
 
     startTransition(async () => {
       await updateQuantityAction(item.id, quantity);
+      router.refresh();
     });
   }
 
@@ -66,6 +69,7 @@ export default function CartClient({ items }: CartClientProps) {
 
     startTransition(async () => {
       await removeFromCartAction(item.id);
+      router.refresh();
     });
   }
 

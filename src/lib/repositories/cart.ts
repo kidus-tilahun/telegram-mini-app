@@ -54,3 +54,15 @@ export async function removeFromCart(id: string) {
 export async function updateQuantity(id: string, quantity: number) {
   return supabase.from("cart_items").update({ quantity }).eq("id", id);
 }
+
+export async function getCartCount() {
+  const { count, error } = await supabase.from("cart_items").select("*", {
+    count: "exact",
+    head: true,
+  });
+
+  return {
+    count: count ?? 0,
+    error,
+  };
+}

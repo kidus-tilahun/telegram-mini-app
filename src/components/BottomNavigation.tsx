@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, ShoppingCart } from "lucide-react";
 
+interface BottomNavigationProps {
+  cartCount: number;
+}
+
 const items = [
   {
     href: "/",
@@ -22,7 +26,7 @@ const items = [
   },
 ];
 
-export default function BottomNavigation() {
+export default function BottomNavigation({ cartCount }: BottomNavigationProps) {
   const pathname = usePathname();
 
   return (
@@ -42,13 +46,21 @@ export default function BottomNavigation() {
               aria-label={label}
               aria-current={active ? "page" : undefined}
               className={[
-                "relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-3 py-2 transition-all",
+                "flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-3 py-2 transition-all",
                 active
                   ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
                   : "text-gray-400 hover:text-white",
               ].join(" ")}
             >
-              <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
+              <div className="relative">
+                <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
+
+                {label === "Cart" && cartCount > 0 && (
+                  <span className="absolute -right-2 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
 
               <span className="text-[10px] font-medium tracking-wide">
                 {label}
