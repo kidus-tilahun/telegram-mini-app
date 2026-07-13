@@ -29,14 +29,18 @@ export async function getProducts(options: GetProductsOptions = {}) {
   return query;
 }
 
-export async function getProductsByCategory(
-  categoryId: string,
-  limit?: number,
-) {
+export async function getProductsByCategory(slug: string, limit?: number) {
   let query = supabase
     .from("products")
-    .select("*")
-    .eq("category_id", categoryId);
+    .select(
+      `
+      *,
+      categories!inner(
+        slug
+      )
+    `,
+    )
+    .eq("categories.slug", slug);
 
   query = query.order("created_at", { ascending: false });
   if (limit) {
