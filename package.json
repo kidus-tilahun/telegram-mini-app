@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "update-types": "npx supabase gen types typescript --linked > src/types/database.ts",
+    "update-types": "npx supabase@2.115.0 gen types typescript --linked > src/types/database.ts",
     "start": "next start",
     "lint": "eslint"
   },
