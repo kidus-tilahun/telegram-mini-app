@@ -20,18 +20,21 @@ export type Database = {
           id: string
           product_id: string
           quantity: number
+          telegram_user_id: number
         }
         Insert: {
           created_at?: string
           id?: string
           product_id?: string
           quantity?: number
+          telegram_user_id: number
         }
         Update: {
           created_at?: string
           id?: string
           product_id?: string
           quantity?: number
+          telegram_user_id?: number
         }
         Relationships: [
           {
