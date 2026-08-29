@@ -31,12 +31,25 @@ export async function addToCartAction(
   quantity: number,
 ): Promise<CartActionResult> {
   try {
-    const { data: existingItem } = await getCartItemByProductId(productId);
+    const existingResult = await getCartItemByProductId(productId);
 
-    if (existingItem) {
-      await updateQuantity(existingItem.id, existingItem.quantity + quantity);
+    if (!existingResult.success) {
+      return { success: false, error: existingResult.error };
+    }
+
+    if (existingResult.data) {
+      const updateResult = await updateQuantity(
+        (existingResult.data as { id: string }).id,
+        (existingResult.data as { quantity: number }).quantity + quantity,
+      );
+      if (!updateResult.success) {
+        return { success: false, error: updateResult.error };
+      }
     } else {
-      await addToCart(productId, quantity);
+      const insertResult = await addToCart(productId, quantity);
+      if (!insertResult.success) {
+        return { success: false, error: insertResult.error };
+      }
     }
 
     revalidatePath("/cart");
@@ -54,10 +67,15 @@ export async function updateQuantityAction(
   quantity: number,
 ): Promise<CartActionResult> {
   try {
+    let result;
     if (quantity <= 0) {
-      await removeFromCart(id);
+      result = await removeFromCart(id);
     } else {
-      await updateQuantity(id, quantity);
+      result = await updateQuantity(id, quantity);
+    }
+
+    if (!result.success) {
+      return { success: false, error: result.error };
     }
 
     revalidatePath("/cart");
@@ -74,7 +92,11 @@ export async function removeFromCartAction(
   id: string,
 ): Promise<CartActionResult> {
   try {
-    await removeFromCart(id);
+    const result = await removeFromCart(id);
+
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
 
     revalidatePath("/cart");
     revalidatePath("/shop");

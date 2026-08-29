@@ -31,7 +31,7 @@ export default function HeroBanner({ heroImageUrl }: HeroBannerProps) {
             Up to 25% off curated picks this week.
           </p>
           <Link
-            href="/products"
+            href="/shop"
             className="mt-4 inline-flex h-11 items-center gap-2 rounded-full bg-surface-elevated px-5 text-sm font-medium text-foreground"
           >
             Shop the edit <ArrowRight size={16} />

@@ -29,7 +29,7 @@ export default function PromoBanner({ imageUrl }: PromoBannerProps) {
             Collection
           </p>
           <Link
-            href="/products"
+            href="/shop"
             className="mt-3 inline-flex w-fit items-center gap-1.5 text-xs font-medium text-white underline-offset-4 hover:underline"
           >
             Explore <ArrowRight size={14} />

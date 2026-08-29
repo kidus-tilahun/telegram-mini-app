@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { addToCartAction } from "@/app/actions/cart";
+import { useTelegramSync } from "./TelegramProvider";
 import { useRouter } from "next/navigation";
 
 interface AddToCartButtonProps {
@@ -15,6 +16,9 @@ export default function AddToCartButton({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { syncStatus } = useTelegramSync();
+
+  const isSyncPending = syncStatus === "pending";
 
   function handleAddToCart() {
     setError(null);
@@ -38,14 +42,14 @@ export default function AddToCartButton({
       )}
       <div className="bg-gray-400 flex items-center gap-3 rounded-full p-2 pl-5 shadow-[var(--shadow-float)]">
         <button
-          disabled={isPending}
+          disabled={isPending || isSyncPending}
           onClick={handleAddToCart}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
         >
-          {isPending ? (
+          {isPending || isSyncPending ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Adding...
+              {isSyncPending ? "Connecting..." : "Adding..."}
             </>
           ) : (
             "Add to Cart"
