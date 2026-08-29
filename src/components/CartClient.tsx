@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 
 import CartList from "./CartList";
 import CartSummary from "./CartSummary";
@@ -27,6 +27,7 @@ type CartAction =
 
 export default function CartClient({ items }: CartClientProps) {
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const [optimisticItems, updateOptimisticItems] = useOptimistic(
@@ -56,7 +57,13 @@ export default function CartClient({ items }: CartClientProps) {
     });
 
     startTransition(async () => {
-      await updateQuantityAction(item.id, quantity);
+      const result = await updateQuantityAction(item.id, quantity);
+      if (!result.success) {
+        setError(result.error);
+        router.refresh();
+        return;
+      }
+
       router.refresh();
     });
   }
@@ -68,13 +75,24 @@ export default function CartClient({ items }: CartClientProps) {
     });
 
     startTransition(async () => {
-      await removeFromCartAction(item.id);
+      const result = await removeFromCartAction(item.id);
+      if (!result.success) {
+        setError(result.error);
+        router.refresh();
+        return;
+      }
+
       router.refresh();
     });
   }
 
   return (
     <>
+      {error && (
+        <p className="mx-4 mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
       <div className="pb-36">
         <CartList
           items={optimisticItems}
