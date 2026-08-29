@@ -41,7 +41,10 @@ export default function TelegramProvider({
   const mountedRef = useRef(true);
 
   const syncTelegramSession = useCallback(async () => {
-    if (hasSyncedRef.current || !mountedRef.current) {
+    if (hasSyncedRef.current) {
+      return;
+    }
+    if (!mountedRef.current) {
       return;
     }
 
@@ -52,12 +55,18 @@ export default function TelegramProvider({
 
     hasSyncedRef.current = true;
 
-    const result = await syncTelegramSessionAction(initData);
-    if (!mountedRef.current) return;
+    try {
+      const result = await syncTelegramSessionAction(initData);
+      if (!mountedRef.current) return;
 
-    if (result.success) {
-      setSyncStatus("synced");
-    } else {
+      if (result.success) {
+        setSyncStatus("synced");
+      } else {
+        hasSyncedRef.current = false;
+        setSyncStatus("failed");
+      }
+    } catch {
+      if (!mountedRef.current) return;
       hasSyncedRef.current = false;
       setSyncStatus("failed");
     }
@@ -83,7 +92,10 @@ export default function TelegramProvider({
     const startTime = Date.now();
 
     const attemptSync = () => {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) {
+        setSyncStatus("failed");
+        return;
+      }
       if (retryCountRef.current >= MAX_RETRY_ATTEMPTS) {
         setSyncStatus("failed");
         return;

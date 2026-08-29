@@ -21,9 +21,15 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     setQuantity((q) => Math.max(1, q - 1));
   }
   return (
-    <section className="relative -mt-2">
-      <header className="flex items-center p-5">
-        <Link href="/shop">← Back</Link>
+    <section className="relative -mt-2 pb-36">
+      <header className="flex items-center px-4 py-3">
+        <Link
+          href="/shop"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span>←</span>
+          <span>Back</span>
+        </Link>
       </header>
       <Image
         src={product.image}
@@ -31,39 +37,45 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         width={800}
         height={1000}
         className="aspect-[4/5] w-full shrink-0 snap-center object-cover"
+        priority
       />
-      <article className="px-5 pt-5 animate-fade-up">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Category
-        </p>
-        <div className="mt-1 flex items-start justify-between gap-3">
-          <h1 className="font-display text-2xl leading-tight text-foreground">
+      <article className="px-5 pt-6 animate-fade-up space-y-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
+            Boutique Collection
+          </p>
+          <h1 className="font-display text-3xl leading-tight text-foreground">
             {product.name}
           </h1>
-
-          <p className="shrink-0 font-display text-2xl text-foreground">
-            ${product.price.toLocaleString()}
-          </p>
         </div>
-        <div className="mt-2 flex items-center gap-2">
+
+        <div className="flex items-baseline justify-between gap-3 py-2 border-b border-border">
+          <p className="shrink-0 font-display text-3xl font-medium text-foreground">
+            ETB {product.price.toLocaleString()}
+          </p>
           {product.stock > 0 ? (
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
+            <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
               In Stock
             </span>
           ) : (
-            <span className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700">
+            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
               Out of Stock
             </span>
           )}
         </div>
 
-        <QuantitySelector
-          quantity={quantity}
-          increase={increase}
-          decrease={decrease}
-        />
-        <AddToCartButton productId={product.id} quantity={quantity} />
+        <div className="py-2">
+          <p className="text-xs text-muted-foreground mb-3">Quantity</p>
+          <QuantitySelector
+            quantity={quantity}
+            increase={increase}
+            decrease={decrease}
+          />
+        </div>
       </article>
+      <div className="fixed inset-x-0 bottom-24 z-30 px-4">
+        <AddToCartButton productId={product.id} quantity={quantity} />
+      </div>
     </section>
   );
 }
