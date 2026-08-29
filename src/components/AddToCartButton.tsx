@@ -34,7 +34,7 @@ export default function AddToCartButton({
     });
   }
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
+    <div className="fixed inset-x-0 bottom-[calc(4rem+max(env(safe-area-inset-bottom),1rem))] z-30 mx-auto max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
       {error && (
         <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700">
           {error}

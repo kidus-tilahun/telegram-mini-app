@@ -39,6 +39,7 @@ export default function TelegramProvider({
   const hasSyncedRef = useRef(false);
   const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
+  const scriptLoadedRef = useRef(false);
 
   const syncTelegramSession = useCallback(async () => {
     if (hasSyncedRef.current) {
@@ -72,30 +73,36 @@ export default function TelegramProvider({
     }
   }, []);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    const webApp = window.Telegram?.WebApp;
-    if (!webApp) {
-      setSyncStatus("failed");
-      return;
-    }
+  // Handle Telegram WebApp initialization when script is ready
+  const initializeWebApp = useCallback(() => {
+    if (!mountedRef.current) return;
 
+    const webApp = window.Telegram?.WebApp;
+    if (!webApp) return;
+
+    // Mark script as loaded
+    scriptLoadedRef.current = true;
+
+    // Initialize the WebApp
     webApp.ready();
     webApp.expand();
 
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
+    // If initData is available immediately, sync
+    const initData = webApp.initData;
+    if (initData && !hasSyncedRef.current) {
+      void syncTelegramSession();
+    }
+  }, [syncTelegramSession]);
 
-  function handleScriptLoad() {
+  // Set up polling/retry for initData after script loads
+  useEffect(() => {
+    if (!scriptLoadedRef.current) return;
+
     const startTime = Date.now();
 
     const attemptSync = () => {
-      if (!mountedRef.current) {
-        setSyncStatus("failed");
-        return;
-      }
+      if (!mountedRef.current) return;
+      if (hasSyncedRef.current) return;
       if (retryCountRef.current >= MAX_RETRY_ATTEMPTS) {
         setSyncStatus("failed");
         return;
@@ -120,13 +127,26 @@ export default function TelegramProvider({
     };
 
     attemptSync();
+  }, [syncTelegramSession]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  function handleScriptLoad() {
+    // Initialize WebApp when script loads
+    initializeWebApp();
   }
 
   return (
     <TelegramSyncContext.Provider value={{ syncStatus }}>
       <Script
         src="https://telegram.org/js/telegram-web-app.js"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         onLoad={handleScriptLoad}
       />
       {children}
