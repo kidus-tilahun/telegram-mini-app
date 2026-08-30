@@ -151,19 +151,19 @@ export default function TelegramProvider({
     attemptSync();
   }, [syncTelegramSession]);
 
-  // Detect Telegram user changes after initial sync
+  // Detect Telegram user changes - always active once script loads
   useEffect(() => {
-    if (syncStatus !== "synced") return;
+    if (!scriptLoadedRef.current) return;
 
     const intervalId = setInterval(() => {
       if (!mountedRef.current) return;
-      if (!window.Telegram?.WebApp?.initDataUnsafe?.user?.id) return;
 
-      const currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+      const currentUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
 
-      // If the Telegram user has changed, re-sync
+      // If the Telegram user has changed from what we synced, re-sync
       if (lastSyncedUserIdRef.current !== currentUserId) {
-        // Reset the synced user ID so syncTelegramSession will proceed
+        // Reset so next syncTelegramSession call will proceed
         lastSyncedUserIdRef.current = null;
         setSyncStatus("pending");
         void syncTelegramSession();
@@ -171,7 +171,7 @@ export default function TelegramProvider({
     }, 2000); // Check every 2 seconds
 
     return () => clearInterval(intervalId);
-  }, [syncStatus, syncTelegramSession]);
+  }, [syncTelegramSession]);
 
   // Cleanup on unmount
   useEffect(() => {
