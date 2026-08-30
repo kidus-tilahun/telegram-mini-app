@@ -38,35 +38,58 @@ export default function TelegramProvider({
   const [syncStatus, setSyncStatus] = useState<TelegramSyncStatus>("pending");
   const mountedRef = useRef(true);
   const scriptLoadedRef = useRef(false);
+  const lastSyncedUserIdRef = useRef<number | null>(null);
   const syncInProgressRef = useRef(false);
 
-  const syncTelegramSession = useCallback(async () => {
+  const syncTelegramSession = useCallback(async (): Promise<boolean> => {
     if (syncInProgressRef.current) {
-      return;
+      return false;
     }
     if (!mountedRef.current) {
-      return;
+      return false;
     }
 
     const initData = window.Telegram?.WebApp?.initData;
     if (!initData) {
-      return;
+      return false;
+    }
+
+    // Extract user ID from initData
+    let userId: number | null = null;
+    try {
+      const params = new URLSearchParams(initData);
+      const userRaw = params.get("user");
+      if (userRaw) {
+        const user = JSON.parse(userRaw);
+        userId = user?.id ?? null;
+      }
+    } catch {
+      // ignore parse errors
+    }
+
+    // Skip if we've already synced this exact user
+    if (lastSyncedUserIdRef.current === userId && userId !== null) {
+      return false;
     }
 
     syncInProgressRef.current = true;
 
     try {
       const result = await syncTelegramSessionAction(initData);
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) return false;
 
       if (result.success) {
+        lastSyncedUserIdRef.current = userId;
         setSyncStatus("synced");
+        return true;
       } else {
         setSyncStatus("failed");
+        return false;
       }
     } catch {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) return false;
       setSyncStatus("failed");
+      return false;
     } finally {
       syncInProgressRef.current = false;
     }
@@ -127,6 +150,28 @@ export default function TelegramProvider({
 
     attemptSync();
   }, [syncTelegramSession]);
+
+  // Detect Telegram user changes after initial sync
+  useEffect(() => {
+    if (syncStatus !== "synced") return;
+
+    const intervalId = setInterval(() => {
+      if (!mountedRef.current) return;
+      if (!window.Telegram?.WebApp?.initDataUnsafe?.user?.id) return;
+
+      const currentUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+      // If the Telegram user has changed, re-sync
+      if (lastSyncedUserIdRef.current !== currentUserId) {
+        // Reset the synced user ID so syncTelegramSession will proceed
+        lastSyncedUserIdRef.current = null;
+        setSyncStatus("pending");
+        void syncTelegramSession();
+      }
+    }, 2000); // Check every 2 seconds
+
+    return () => clearInterval(intervalId);
+  }, [syncStatus, syncTelegramSession]);
 
   // Cleanup on unmount
   useEffect(() => {
