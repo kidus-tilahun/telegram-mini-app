@@ -36,13 +36,12 @@ export default function TelegramProvider({
   children: React.ReactNode;
 }) {
   const [syncStatus, setSyncStatus] = useState<TelegramSyncStatus>("pending");
-  const hasSyncedRef = useRef(false);
-  const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
   const scriptLoadedRef = useRef(false);
+  const syncInProgressRef = useRef(false);
 
   const syncTelegramSession = useCallback(async () => {
-    if (hasSyncedRef.current) {
+    if (syncInProgressRef.current) {
       return;
     }
     if (!mountedRef.current) {
@@ -54,7 +53,7 @@ export default function TelegramProvider({
       return;
     }
 
-    hasSyncedRef.current = true;
+    syncInProgressRef.current = true;
 
     try {
       const result = await syncTelegramSessionAction(initData);
@@ -63,13 +62,13 @@ export default function TelegramProvider({
       if (result.success) {
         setSyncStatus("synced");
       } else {
-        hasSyncedRef.current = false;
         setSyncStatus("failed");
       }
     } catch {
       if (!mountedRef.current) return;
-      hasSyncedRef.current = false;
       setSyncStatus("failed");
+    } finally {
+      syncInProgressRef.current = false;
     }
   }, []);
 
@@ -89,7 +88,7 @@ export default function TelegramProvider({
 
     // If initData is available immediately, sync
     const initData = webApp.initData;
-    if (initData && !hasSyncedRef.current) {
+    if (initData) {
       void syncTelegramSession();
     }
   }, [syncTelegramSession]);
@@ -99,11 +98,11 @@ export default function TelegramProvider({
     if (!scriptLoadedRef.current) return;
 
     const startTime = Date.now();
+    let retryCount = 0;
 
     const attemptSync = () => {
       if (!mountedRef.current) return;
-      if (hasSyncedRef.current) return;
-      if (retryCountRef.current >= MAX_RETRY_ATTEMPTS) {
+      if (retryCount >= MAX_RETRY_ATTEMPTS) {
         setSyncStatus("failed");
         return;
       }
@@ -114,9 +113,9 @@ export default function TelegramProvider({
 
       const initData = window.Telegram?.WebApp?.initData;
       if (!initData) {
-        retryCountRef.current++;
+        retryCount++;
         const delay = Math.min(
-          RETRY_BASE_DELAY_MS * Math.pow(1.5, retryCountRef.current - 1),
+          RETRY_BASE_DELAY_MS * Math.pow(1.5, retryCount - 1),
           1000,
         );
         setTimeout(attemptSync, delay);
