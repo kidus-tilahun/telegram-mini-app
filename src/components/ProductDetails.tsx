@@ -74,7 +74,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         </div>
       </article>
       <div className="fixed inset-x-0 bottom-24 z-30 px-4">
-        <AddToCartButton productId={product.id} quantity={quantity} />
+        <AddToCartButton
+          productId={product.id}
+          quantity={quantity}
+          stock={product.stock}
+        />
       </div>
     </section>
   );

@@ -58,6 +58,20 @@ export async function getProductById(id: string) {
   return query;
 }
 
+export async function getProductStock(id: string): Promise<number | null> {
+  const { data, error } = await supabase
+    .from("products")
+    .select("stock")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data.stock;
+}
+
 export async function getRelatedProducts(
   categoryId: string,
   currentProductId: string,

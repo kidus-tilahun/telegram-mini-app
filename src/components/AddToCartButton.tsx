@@ -7,11 +7,13 @@ import { useRouter } from "next/navigation";
 interface AddToCartButtonProps {
   productId: string;
   quantity: number;
+  stock: number;
 }
 
 export default function AddToCartButton({
   productId,
   quantity,
+  stock,
 }: AddToCartButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +21,7 @@ export default function AddToCartButton({
   const { syncStatus } = useTelegramSync();
 
   const isSyncPending = syncStatus === "pending";
+  const isOutOfStock = stock <= 0;
 
   function handleAddToCart() {
     setError(null);
@@ -42,7 +45,7 @@ export default function AddToCartButton({
       )}
       <div className="bg-gray-400 flex items-center gap-3 rounded-full p-2 pl-5 shadow-[var(--shadow-float)]">
         <button
-          disabled={isPending || isSyncPending}
+          disabled={isPending || isSyncPending || isOutOfStock}
           onClick={handleAddToCart}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
         >
@@ -51,6 +54,8 @@ export default function AddToCartButton({
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               {isSyncPending ? "Connecting..." : "Adding..."}
             </>
+          ) : isOutOfStock ? (
+            "Out of Stock"
           ) : (
             "Add to Cart"
           )}

@@ -5,6 +5,7 @@ import {
   getTelegramUser,
   requireTelegramUser,
 } from "../telegram/get-telegram-user";
+import { getProductStock } from "./products";
 
 async function getVerifiedTelegramUserId(): Promise<number | null> {
   const user = await getTelegramUser();
@@ -20,6 +21,15 @@ export async function addToCart(
   const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
 
+  // Validate stock before adding to cart
+  const stock = await getProductStock(productId);
+  if (stock === null) {
+    return { success: false, error: "Product not found." };
+  }
+  if (stock <= 0) {
+    return { success: false, error: "This product is out of stock." };
+  }
+
   const { data: existingItem, error: selectError } = await supabase
     .from("cart_items")
     .select("*")
@@ -32,10 +42,18 @@ export async function addToCart(
   }
 
   if (existingItem) {
+    const newQuantity = existingItem.quantity + quantity;
+    if (newQuantity > stock) {
+      return {
+        success: false,
+        error: `Only ${stock} item(s) available in stock.`,
+      };
+    }
+
     const { data, error } = await supabase
       .from("cart_items")
       .update({
-        quantity: existingItem.quantity + quantity,
+        quantity: newQuantity,
       })
       .eq("id", existingItem.id)
       .eq("telegram_user_id", user.id)
@@ -46,6 +64,13 @@ export async function addToCart(
       return { success: false, error: error.message };
     }
     return { success: true, data };
+  }
+
+  if (quantity > stock) {
+    return {
+      success: false,
+      error: `Only ${stock} item(s) available in stock.`,
+    };
   }
 
   const { data, error } = await supabase
@@ -146,6 +171,30 @@ export async function updateQuantity(
 ): Promise<{ success: true } | { success: false; error: string }> {
   const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
+
+  // Get the cart item to find the product_id
+  const { data: cartItem, error: selectError } = await supabase
+    .from("cart_items")
+    .select("product_id")
+    .eq("id", id)
+    .eq("telegram_user_id", user.id)
+    .single();
+
+  if (selectError || !cartItem) {
+    return { success: false, error: "Cart item not found." };
+  }
+
+  // Validate stock
+  const stock = await getProductStock(cartItem.product_id);
+  if (stock === null) {
+    return { success: false, error: "Product not found." };
+  }
+  if (quantity > stock) {
+    return {
+      success: false,
+      error: `Only ${stock} item(s) available in stock.`,
+    };
+  }
 
   const { error } = await supabase
     .from("cart_items")
