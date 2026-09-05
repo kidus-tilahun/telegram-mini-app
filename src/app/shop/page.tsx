@@ -1,7 +1,7 @@
 import ProductCard from "@/components/ProductCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
-import { getCartCount } from "@/lib/repositories/cart";
+import { getCartCountFromCookie } from "@/lib/repositories/cart";
 
 import {
   getProducts,
@@ -20,7 +20,7 @@ interface ShopPageProps {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const { q, category } = await searchParams;
-  const { count } = await getCartCount();
+  const { count } = await getCartCountFromCookie();
   const [
     { data: products, error: productsError },
     { data: categories, error: categoriesError },

@@ -95,48 +95,6 @@ export default function TelegramProvider({
     }
   }, []);
 
-  // Retry sync with backoff - used when user changes but initData not ready yet
-  const retrySyncTelegramSession = useCallback(async (): Promise<void> => {
-    const startTime = Date.now();
-    let retryCount = 0;
-
-    const attemptSync = async (): Promise<void> => {
-      if (!mountedRef.current) return;
-      if (retryCount >= MAX_RETRY_ATTEMPTS) {
-        setSyncStatus("failed");
-        return;
-      }
-      if (Date.now() - startTime > MAX_TOTAL_WAIT_MS) {
-        setSyncStatus("failed");
-        return;
-      }
-
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) {
-        retryCount++;
-        const delay = Math.min(
-          RETRY_BASE_DELAY_MS * Math.pow(1.5, retryCount - 1),
-          1000,
-        );
-        setTimeout(attemptSync, delay);
-        return;
-      }
-
-      const success = await syncTelegramSession();
-      if (!success && mountedRef.current) {
-        // If sync failed for reasons other than "already synced", retry
-        retryCount++;
-        const delay = Math.min(
-          RETRY_BASE_DELAY_MS * Math.pow(1.5, retryCount - 1),
-          1000,
-        );
-        setTimeout(attemptSync, delay);
-      }
-    };
-
-    await attemptSync();
-  }, [syncTelegramSession]);
-
   // Handle Telegram WebApp initialization when script is ready
   const initializeWebApp = useCallback(() => {
     if (!mountedRef.current) return;
@@ -193,7 +151,7 @@ export default function TelegramProvider({
     attemptSync();
   }, [scriptLoaded, syncTelegramSession]);
 
-  // Detect Telegram user changes - always active once script loads
+  // Detect Telegram user changes - keep cookie fresh for non-cart pages
   useEffect(() => {
     if (!scriptLoaded) return;
 
@@ -208,12 +166,12 @@ export default function TelegramProvider({
         // Reset so next syncTelegramSession call will proceed
         lastSyncedUserIdRef.current = null;
         setSyncStatus("pending");
-        void retrySyncTelegramSession();
+        void syncTelegramSession();
       }
     }, 2000); // Check every 2 seconds
 
     return () => clearInterval(intervalId);
-  }, [scriptLoaded, retrySyncTelegramSession]);
+  }, [scriptLoaded, syncTelegramSession]);
 
   // Cleanup on unmount
   useEffect(() => {

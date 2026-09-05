@@ -26,8 +26,14 @@ export default function AddToCartButton({
   function handleAddToCart() {
     setError(null);
 
+    const initData = window.Telegram?.WebApp?.initData;
+    if (!initData) {
+      setError("Telegram session not ready. Please try again.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await addToCartAction(productId, quantity);
+      const result = await addToCartAction(productId, quantity, initData);
       if (!result.success) {
         setError(result.error);
         return;

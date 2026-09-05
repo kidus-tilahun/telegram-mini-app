@@ -56,8 +56,15 @@ export default function CartClient({ items }: CartClientProps) {
       quantity,
     });
 
+    const initData = window.Telegram?.WebApp?.initData;
+    if (!initData) {
+      setError("Telegram session not ready. Please try again.");
+      router.refresh();
+      return;
+    }
+
     startTransition(async () => {
-      const result = await updateQuantityAction(item.id, quantity);
+      const result = await updateQuantityAction(item.id, quantity, initData);
       if (!result.success) {
         setError(result.error);
         router.refresh();
@@ -74,8 +81,15 @@ export default function CartClient({ items }: CartClientProps) {
       id: item.id,
     });
 
+    const initData = window.Telegram?.WebApp?.initData;
+    if (!initData) {
+      setError("Telegram session not ready. Please try again.");
+      router.refresh();
+      return;
+    }
+
     startTransition(async () => {
-      const result = await removeFromCartAction(item.id);
+      const result = await removeFromCartAction(item.id, initData);
       if (!result.success) {
         setError(result.error);
         router.refresh();

@@ -1,24 +1,16 @@
 import "server-only";
 
 import { createServiceRoleClient } from "../supabase-server";
-import {
-  getTelegramUser,
-  requireTelegramUser,
-} from "../telegram/get-telegram-user";
 import { getProductStock } from "./products";
-
-async function getVerifiedTelegramUserId(): Promise<number | null> {
-  const user = await getTelegramUser();
-  return user?.id ?? null;
-}
+import type { CartItem } from "@/types/cart";
 
 export async function addToCart(
   productId: string,
   quantity: number,
+  telegramUserId: number,
 ): Promise<
   { success: true; data: unknown } | { success: false; error: string }
 > {
-  const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
 
   // Validate stock before adding to cart
@@ -34,7 +26,7 @@ export async function addToCart(
     .from("cart_items")
     .select("*")
     .eq("product_id", productId)
-    .eq("telegram_user_id", user.id)
+    .eq("telegram_user_id", telegramUserId)
     .maybeSingle();
 
   if (selectError) {
@@ -56,7 +48,7 @@ export async function addToCart(
         quantity: newQuantity,
       })
       .eq("id", existingItem.id)
-      .eq("telegram_user_id", user.id)
+      .eq("telegram_user_id", telegramUserId)
       .select()
       .single();
 
@@ -78,7 +70,7 @@ export async function addToCart(
     .insert({
       product_id: productId,
       quantity,
-      telegram_user_id: user.id,
+      telegram_user_id: telegramUserId,
     })
     .select()
     .single();
@@ -96,12 +88,12 @@ export async function addToCart(
   return { success: true, data };
 }
 
-export async function getCartItems() {
-  const telegramUserId = await getVerifiedTelegramUserId();
-  if (telegramUserId === null) {
-    return { success: true, data: [], error: null };
-  }
-
+export async function getCartItems(
+  telegramUserId: number,
+): Promise<
+  | { success: true; data: CartItem[]; error: null }
+  | { success: false; data: null; error: string }
+> {
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
@@ -123,22 +115,22 @@ export async function getCartItems() {
   if (error) {
     return { success: false, data: null, error: error.message };
   }
-  return { success: true, data, error: null };
+  return { success: true, data: (data ?? []) as CartItem[], error: null };
 }
 
 export async function getCartItemByProductId(
   productId: string,
+  telegramUserId: number,
 ): Promise<
   { success: true; data: unknown } | { success: false; error: string }
 > {
-  const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
 
   const { data, error } = await supabase
     .from("cart_items")
     .select("*")
     .eq("product_id", productId)
-    .eq("telegram_user_id", user.id)
+    .eq("telegram_user_id", telegramUserId)
     .maybeSingle();
 
   if (error) {
@@ -149,15 +141,15 @@ export async function getCartItemByProductId(
 
 export async function removeFromCart(
   id: string,
+  telegramUserId: number,
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
 
   const { error } = await supabase
     .from("cart_items")
     .delete()
     .eq("id", id)
-    .eq("telegram_user_id", user.id);
+    .eq("telegram_user_id", telegramUserId);
 
   if (error) {
     return { success: false, error: error.message };
@@ -168,8 +160,8 @@ export async function removeFromCart(
 export async function updateQuantity(
   id: string,
   quantity: number,
+  telegramUserId: number,
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const user = await requireTelegramUser();
   const supabase = createServiceRoleClient();
 
   // Get the cart item to find the product_id
@@ -177,7 +169,7 @@ export async function updateQuantity(
     .from("cart_items")
     .select("product_id")
     .eq("id", id)
-    .eq("telegram_user_id", user.id)
+    .eq("telegram_user_id", telegramUserId)
     .single();
 
   if (selectError || !cartItem) {
@@ -200,7 +192,7 @@ export async function updateQuantity(
     .from("cart_items")
     .update({ quantity })
     .eq("id", id)
-    .eq("telegram_user_id", user.id);
+    .eq("telegram_user_id", telegramUserId);
 
   if (error) {
     return { success: false, error: error.message };
@@ -208,14 +200,37 @@ export async function updateQuantity(
   return { success: true };
 }
 
-export async function getCartCount() {
-  const telegramUserId = await getVerifiedTelegramUserId();
-  if (telegramUserId === null) {
-    return {
-      success: true,
-      count: 0,
-      error: null,
-    };
+export async function getCartCount(
+  telegramUserId: number,
+): Promise<
+  | { success: true; count: number; error: null }
+  | { success: false; count: 0; error: string }
+> {
+  const supabase = createServiceRoleClient();
+  const { count, error } = await supabase
+    .from("cart_items")
+    .select("*", {
+      count: "exact",
+      head: true,
+    })
+    .eq("telegram_user_id", telegramUserId);
+
+  if (error) {
+    return { success: false, count: 0, error: error.message };
+  }
+  return { success: true, count: count ?? 0, error: null };
+}
+
+// Cookie-based version for Server Components (non-cart pages like home page badge)
+import { getTelegramUser } from "../telegram/get-telegram-user";
+
+export async function getCartCountFromCookie(): Promise<
+  | { success: true; count: number; error: null }
+  | { success: false; count: 0; error: string }
+> {
+  const user = await getTelegramUser();
+  if (!user) {
+    return { success: true, count: 0, error: null };
   }
 
   const supabase = createServiceRoleClient();
@@ -225,7 +240,7 @@ export async function getCartCount() {
       count: "exact",
       head: true,
     })
-    .eq("telegram_user_id", telegramUserId);
+    .eq("telegram_user_id", user.id);
 
   if (error) {
     return { success: false, count: 0, error: error.message };
