@@ -36,3 +36,7 @@ export async function getOrderById(id: string) {
     .eq("id", id)
     .single();
 }
+
+export async function updateOrderStatus(id: string, status: string) {
+  return supabase.from("orders").update({ status }).eq("id", id);
+}
