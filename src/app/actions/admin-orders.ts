@@ -40,11 +40,13 @@ export async function getAdminOrdersAction(): Promise<GetAdminOrdersResult> {
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("Supabase error fetching orders:", error);
       return { success: false, error: error.message };
     }
 
     return { success: true, orders: orders ?? [] };
   } catch (error) {
+    console.error("Unexpected error fetching orders:", error);
     return { success: false, error: "Failed to fetch orders" };
   }
 }
@@ -66,11 +68,13 @@ export async function updateOrderStatusAction(
       .eq("id", orderId);
 
     if (error) {
+      console.error("Supabase error updating order status:", error);
       return { success: false, error: error.message };
     }
 
     return { success: true };
   } catch (error) {
+    console.error("Unexpected error updating order status:", error);
     return { success: false, error: "Failed to update order status" };
   }
 }
