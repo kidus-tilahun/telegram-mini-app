@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useState, useTransition } from "react";
+import { useCallback, useOptimistic, useState } from "react";
 
 import CartList from "./CartList";
 import CartSummary from "./CartSummary";
@@ -19,15 +19,17 @@ type CartAction =
       type: "update";
       id: string;
       quantity: number;
+      previousQuantity: number;
     }
   | {
       type: "delete";
       id: string;
+      item: CartItem;
     };
 
 export default function CartClient({ items }: CartClientProps) {
-  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
   const router = useRouter();
 
   const [optimisticItems, updateOptimisticItems] = useOptimistic(
@@ -47,58 +49,112 @@ export default function CartClient({ items }: CartClientProps) {
     },
   );
 
-  function changeQuantity(item: CartItem, quantity: number) {
-    if (quantity < 1) return;
-
-    updateOptimisticItems({
-      type: "update",
-      id: item.id,
-      quantity,
-    });
-
-    const initData = window.Telegram?.WebApp?.initData;
-    if (!initData) {
-      setError("Telegram session not ready. Please try again.");
-      router.refresh();
-      return;
-    }
-
-    startTransition(async () => {
-      const result = await updateQuantityAction(item.id, quantity, initData);
-      if (!result.success) {
-        setError(result.error);
-        router.refresh();
+  const changeQuantity = useCallback(
+    async (item: CartItem, quantity: number) => {
+      if (quantity < 1) {
+        await deleteItem(item);
         return;
       }
 
-      router.refresh();
-    });
-  }
+      setError(null);
+      setIsMutating(true);
 
-  function deleteItem(item: CartItem) {
-    updateOptimisticItems({
-      type: "delete",
-      id: item.id,
-    });
+      // Store previous quantity for potential rollback
+      const previousQuantity = item.quantity;
 
-    const initData = window.Telegram?.WebApp?.initData;
-    if (!initData) {
-      setError("Telegram session not ready. Please try again.");
-      router.refresh();
-      return;
-    }
+      updateOptimisticItems({
+        type: "update",
+        id: item.id,
+        quantity,
+        previousQuantity,
+      });
 
-    startTransition(async () => {
-      const result = await removeFromCartAction(item.id, initData);
-      if (!result.success) {
-        setError(result.error);
-        router.refresh();
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) {
+        setError("Telegram session not ready. Please try again.");
+        // Revert optimistic update
+        updateOptimisticItems({
+          type: "update",
+          id: item.id,
+          quantity: previousQuantity,
+          previousQuantity: quantity,
+        });
+        setIsMutating(false);
         return;
       }
 
-      router.refresh();
-    });
-  }
+      try {
+        const result = await updateQuantityAction(item.id, quantity, initData);
+        if (!result.success) {
+          setError(result.error);
+          // Revert optimistic update
+          updateOptimisticItems({
+            type: "update",
+            id: item.id,
+            quantity: previousQuantity,
+            previousQuantity: quantity,
+          });
+          setIsMutating(false);
+          return;
+        }
+
+        // Success: refresh to sync server state
+        router.refresh();
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [router, updateOptimisticItems],
+  );
+
+  const deleteItem = useCallback(
+    async (item: CartItem) => {
+      setError(null);
+      setIsMutating(true);
+
+      updateOptimisticItems({
+        type: "delete",
+        id: item.id,
+        item,
+      });
+
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) {
+        setError("Telegram session not ready. Please try again.");
+        // Revert optimistic update by re-adding the item
+        updateOptimisticItems({
+          type: "update",
+          id: item.id,
+          quantity: item.quantity,
+          previousQuantity: 0,
+        });
+        setIsMutating(false);
+        return;
+      }
+
+      try {
+        const result = await removeFromCartAction(item.id, initData);
+        if (!result.success) {
+          setError(result.error);
+          // Revert optimistic update by re-adding the item
+          updateOptimisticItems({
+            type: "update",
+            id: item.id,
+            quantity: item.quantity,
+            previousQuantity: 0,
+          });
+          setIsMutating(false);
+          return;
+        }
+
+        // Success: refresh to sync server state
+        router.refresh();
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [router, updateOptimisticItems],
+  );
 
   return (
     <>
@@ -113,7 +169,7 @@ export default function CartClient({ items }: CartClientProps) {
           onIncrease={(item) => changeQuantity(item, item.quantity + 1)}
           onDecrease={(item) => changeQuantity(item, item.quantity - 1)}
           onDelete={deleteItem}
-          disabled={isPending}
+          disabled={isMutating}
         />
 
         <CartSummary items={optimisticItems} />
