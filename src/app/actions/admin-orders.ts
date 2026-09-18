@@ -21,7 +21,11 @@ export type GetAdminOrdersResult =
 
 export async function getAdminOrdersAction(): Promise<GetAdminOrdersResult> {
   try {
+    console.log("[AdminOrders] Creating service role client...");
     const supabase = createServiceRoleClient();
+    console.log(
+      "[AdminOrders] Service role client created, querying orders...",
+    );
 
     const { data: orders, error } = await supabase
       .from("orders")
@@ -40,13 +44,17 @@ export async function getAdminOrdersAction(): Promise<GetAdminOrdersResult> {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Supabase error fetching orders:", error);
+      console.error("[AdminOrders] Supabase error fetching orders:", error);
       return { success: false, error: error.message };
     }
 
+    console.log(
+      "[AdminOrders] Successfully fetched orders:",
+      orders?.length || 0,
+    );
     return { success: true, orders: orders ?? [] };
   } catch (error) {
-    console.error("Unexpected error fetching orders:", error);
+    console.error("[AdminOrders] Unexpected error fetching orders:", error);
     return { success: false, error: "Failed to fetch orders" };
   }
 }
@@ -60,6 +68,7 @@ export async function updateOrderStatusAction(
   status: string,
 ): Promise<UpdateOrderStatusResult> {
   try {
+    console.log("[AdminOrders] Updating order status:", { orderId, status });
     const supabase = createServiceRoleClient();
 
     const { error } = await supabase
@@ -68,13 +77,20 @@ export async function updateOrderStatusAction(
       .eq("id", orderId);
 
     if (error) {
-      console.error("Supabase error updating order status:", error);
+      console.error(
+        "[AdminOrders] Supabase error updating order status:",
+        error,
+      );
       return { success: false, error: error.message };
     }
 
+    console.log("[AdminOrders] Successfully updated order status");
     return { success: true };
   } catch (error) {
-    console.error("Unexpected error updating order status:", error);
+    console.error(
+      "[AdminOrders] Unexpected error updating order status:",
+      error,
+    );
     return { success: false, error: "Failed to update order status" };
   }
 }
