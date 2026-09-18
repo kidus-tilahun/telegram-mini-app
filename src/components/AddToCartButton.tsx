@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import { addToCartAction } from "@/app/actions/cart";
 import { useTelegramSync } from "./TelegramProvider";
 import { useRouter } from "next/navigation";
@@ -15,24 +15,26 @@ export default function AddToCartButton({
   quantity,
   stock,
 }: AddToCartButtonProps) {
-  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
   const router = useRouter();
   const { syncStatus } = useTelegramSync();
 
   const isSyncPending = syncStatus === "pending";
   const isOutOfStock = stock <= 0;
 
-  function handleAddToCart() {
+  const handleAddToCart = useCallback(async () => {
     setError(null);
+    setIsMutating(true);
 
     const initData = window.Telegram?.WebApp?.initData;
     if (!initData) {
       setError("Telegram session not ready. Please try again.");
+      setIsMutating(false);
       return;
     }
 
-    startTransition(async () => {
+    try {
       const result = await addToCartAction(productId, quantity, initData);
       if (!result.success) {
         setError(result.error);
@@ -40,8 +42,11 @@ export default function AddToCartButton({
       }
 
       router.refresh();
-    });
-  }
+    } finally {
+      setIsMutating(false);
+    }
+  }, [productId, quantity, router]);
+
   return (
     <div className="fixed inset-x-0 bottom-[calc(4rem+max(env(safe-area-inset-bottom),1rem))] z-30 mx-auto max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
       {error && (
@@ -51,11 +56,11 @@ export default function AddToCartButton({
       )}
       <div className="bg-gray-400 flex items-center gap-3 rounded-full p-2 pl-5 shadow-[var(--shadow-float)]">
         <button
-          disabled={isPending || isSyncPending || isOutOfStock}
+          disabled={isMutating || isSyncPending || isOutOfStock}
           onClick={handleAddToCart}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
         >
-          {isPending || isSyncPending ? (
+          {isMutating || isSyncPending ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               {isSyncPending ? "Connecting..." : "Adding..."}

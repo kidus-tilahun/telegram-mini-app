@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import BottomNavigation from "@/components/BottomNavigation";
 import CartClient from "@/components/CartClient";
 import EmptyCart from "@/components/EmptyCart";
@@ -14,7 +13,6 @@ export default function CartPage() {
   const [count, setCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     async function loadCart() {
@@ -74,7 +72,7 @@ export default function CartPage() {
       {cartItems.length === 0 ? (
         <EmptyCart />
       ) : (
-        <CartClient items={cartItems} />
+        <CartClient items={cartItems} setItems={setItems} setCount={setCount} />
       )}
       <BottomNavigation cartCount={count} />
     </main>

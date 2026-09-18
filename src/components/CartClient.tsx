@@ -4,7 +4,6 @@ import { useCallback, useOptimistic, useState } from "react";
 
 import CartList from "./CartList";
 import CartSummary from "./CartSummary";
-import { useRouter } from "next/navigation";
 
 import { updateQuantityAction, removeFromCartAction } from "@/app/actions/cart";
 
@@ -12,6 +11,8 @@ import type { CartItem } from "@/types/cart";
 
 interface CartClientProps {
   items: CartItem[];
+  setItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  setCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
 type CartAction =
@@ -27,10 +28,13 @@ type CartAction =
       item: CartItem;
     };
 
-export default function CartClient({ items }: CartClientProps) {
+export default function CartClient({
+  items,
+  setItems,
+  setCount,
+}: CartClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
-  const router = useRouter();
 
   const [optimisticItems, updateOptimisticItems] = useOptimistic(
     items,
@@ -98,13 +102,15 @@ export default function CartClient({ items }: CartClientProps) {
           return;
         }
 
-        // Success: refresh to sync server state
-        router.refresh();
+        // Success: sync parent state
+        setItems((prev) =>
+          prev.map((i) => (i.id === item.id ? { ...i, quantity } : i)),
+        );
       } finally {
         setIsMutating(false);
       }
     },
-    [router, updateOptimisticItems],
+    [setItems, updateOptimisticItems],
   );
 
   const deleteItem = useCallback(
@@ -147,13 +153,14 @@ export default function CartClient({ items }: CartClientProps) {
           return;
         }
 
-        // Success: refresh to sync server state
-        router.refresh();
+        // Success: sync parent state
+        setItems((prev) => prev.filter((i) => i.id !== item.id));
+        setCount((prev) => prev - 1);
       } finally {
         setIsMutating(false);
       }
     },
-    [router, updateOptimisticItems],
+    [setItems, setCount, updateOptimisticItems],
   );
 
   return (

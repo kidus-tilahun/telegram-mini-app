@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/types/product";
 import QuantitySelector from "./QuantitySelector";
@@ -13,13 +13,13 @@ interface ProductDetailsProps {
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const [quantity, setQuantity] = useState(1);
 
-  function increase() {
+  const increase = useCallback(() => {
     setQuantity((q) => q + 1);
-  }
+  }, []);
 
-  function decrease() {
+  const decrease = useCallback(() => {
     setQuantity((q) => Math.max(1, q - 1));
-  }
+  }, []);
   return (
     <section className="relative -mt-2 pb-36">
       <header className="flex items-center px-4 py-3">
@@ -37,7 +37,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
         width={800}
         height={1000}
         className="aspect-[4/5] w-full shrink-0 snap-center object-cover"
-        priority
+        loading="lazy"
       />
       <article className="px-5 pt-6 animate-fade-up space-y-4">
         <div>

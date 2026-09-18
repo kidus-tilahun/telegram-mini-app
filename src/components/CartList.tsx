@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import CartItem from "./CartItem";
 
 import type { CartItem as CartItemType } from "@/types/cart";
@@ -19,15 +20,28 @@ export default function CartList({
   onDelete,
   disabled,
 }: CartListProps) {
+  const handleIncrease = useCallback(
+    (item: CartItemType) => onIncrease(item),
+    [onIncrease],
+  );
+  const handleDecrease = useCallback(
+    (item: CartItemType) => onDecrease(item),
+    [onDecrease],
+  );
+  const handleDelete = useCallback(
+    (item: CartItemType) => onDelete(item),
+    [onDelete],
+  );
+
   return (
     <section className="space-y-3 px-5">
       {items.map((item) => (
         <CartItem
           key={item.id}
           item={item}
-          onIncrease={() => onIncrease(item)}
-          onDecrease={() => onDecrease(item)}
-          onDelete={() => onDelete(item)}
+          onIncrease={() => handleIncrease(item)}
+          onDecrease={() => handleDecrease(item)}
+          onDelete={() => handleDelete(item)}
           disabled={disabled}
         />
       ))}

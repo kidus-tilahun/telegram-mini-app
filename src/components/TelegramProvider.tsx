@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -29,6 +30,8 @@ export function useTelegramSync() {
 const MAX_RETRY_ATTEMPTS = 10;
 const RETRY_BASE_DELAY_MS = 300;
 const MAX_TOTAL_WAIT_MS = 5000;
+// Reduced polling interval from 2000ms to 5000ms to reduce re-renders
+const USER_CHANGE_POLL_INTERVAL = 5000;
 
 export default function TelegramProvider({
   children,
@@ -152,6 +155,8 @@ export default function TelegramProvider({
   }, [scriptLoaded, syncTelegramSession]);
 
   // Detect Telegram user changes - keep cookie fresh for non-cart pages
+  // Using a ref to track if we've already detected a change to avoid repeated state updates
+  const userChangeDetectedRef = useRef(false);
   useEffect(() => {
     if (!scriptLoaded) return;
 
@@ -163,12 +168,19 @@ export default function TelegramProvider({
 
       // If the Telegram user has changed from what we synced, re-sync
       if (lastSyncedUserIdRef.current !== currentUserId) {
-        // Reset so next syncTelegramSession call will proceed
-        lastSyncedUserIdRef.current = null;
-        setSyncStatus("pending");
-        void syncTelegramSession();
+        // Only trigger re-sync once per user change
+        if (!userChangeDetectedRef.current) {
+          userChangeDetectedRef.current = true;
+          // Reset so next syncTelegramSession call will proceed
+          lastSyncedUserIdRef.current = null;
+          setSyncStatus("pending");
+          void syncTelegramSession();
+        }
+      } else {
+        // Reset the flag when user is back to the synced one
+        userChangeDetectedRef.current = false;
       }
-    }, 2000); // Check every 2 seconds
+    }, USER_CHANGE_POLL_INTERVAL);
 
     return () => clearInterval(intervalId);
   }, [scriptLoaded, syncTelegramSession]);
@@ -186,8 +198,11 @@ export default function TelegramProvider({
     initializeWebApp();
   }
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({ syncStatus }), [syncStatus]);
+
   return (
-    <TelegramSyncContext.Provider value={{ syncStatus }}>
+    <TelegramSyncContext.Provider value={contextValue}>
       <Script
         src="https://telegram.org/js/telegram-web-app.js"
         strategy="afterInteractive"

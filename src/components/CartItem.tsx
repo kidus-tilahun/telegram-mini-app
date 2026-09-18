@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import type { CartItem } from "@/types/cart";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +14,7 @@ interface CartItemProps {
   disabled: boolean;
 }
 
-export default function CartItem({
+function CartItemComponent({
   item,
   onIncrease,
   onDecrease,
@@ -78,3 +79,5 @@ export default function CartItem({
     </article>
   );
 }
+
+export default memo(CartItemComponent);
