@@ -1,6 +1,7 @@
 "use server";
 
 import { createServiceRoleClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/telegram/is-admin";
 import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 
 export type AdminCategory = Tables<"categories">;
@@ -10,6 +11,12 @@ export type GetAdminCategoriesResult =
   | { success: false; error: string };
 
 export async function getAdminCategoriesAction(): Promise<GetAdminCategoriesResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminCategories] Creating service role client...");
     const supabase = createServiceRoleClient();
@@ -54,6 +61,12 @@ export async function createCategoryAction(
   input: CreateCategoryInput,
 ): Promise<CreateCategoryResult> {
   try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
+  try {
     console.log("[AdminCategories] Creating category:", input);
     const supabase = createServiceRoleClient();
 
@@ -95,6 +108,12 @@ export async function updateCategoryAction(
   input: UpdateCategoryInput,
 ): Promise<UpdateCategoryResult> {
   try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
+  try {
     console.log("[AdminCategories] Updating category:", input);
     const { id, ...updates } = input;
     const supabase = createServiceRoleClient();
@@ -135,6 +154,12 @@ export type DeleteCategoryResult =
 export async function deleteCategoryAction(
   id: string,
 ): Promise<DeleteCategoryResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminCategories] Deleting category:", id);
     const supabase = createServiceRoleClient();

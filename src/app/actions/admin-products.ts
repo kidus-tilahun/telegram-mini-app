@@ -1,6 +1,7 @@
 "use server";
 
 import { createServiceRoleClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/telegram/is-admin";
 import type { Tables, TablesInsert, TablesUpdate } from "@/types/database";
 
 export type AdminProduct = Tables<"products">;
@@ -10,6 +11,12 @@ export type GetAdminProductsResult =
   | { success: false; error: string };
 
 export async function getAdminProductsAction(): Promise<GetAdminProductsResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminProducts] Creating service role client...");
     const supabase = createServiceRoleClient();
@@ -48,6 +55,12 @@ export async function createProductAction(
   input: CreateProductInput,
 ): Promise<CreateProductResult> {
   try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
+  try {
     console.log("[AdminProducts] Creating product:", input);
     const supabase = createServiceRoleClient();
 
@@ -80,6 +93,12 @@ export async function updateProductAction(
   input: UpdateProductInput,
 ): Promise<UpdateProductResult> {
   try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
+  try {
     console.log("[AdminProducts] Updating product:", input);
     const { id, ...updates } = input;
     const supabase = createServiceRoleClient();
@@ -111,6 +130,12 @@ export type DeleteProductResult =
 export async function deleteProductAction(
   id: string,
 ): Promise<DeleteProductResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminProducts] Deleting product:", id);
     const supabase = createServiceRoleClient();

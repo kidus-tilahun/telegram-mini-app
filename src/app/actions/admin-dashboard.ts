@@ -1,6 +1,7 @@
 "use server";
 
 import { createServiceRoleClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/telegram/is-admin";
 
 export type DashboardStats = {
   totalOrders: number;
@@ -20,6 +21,12 @@ export type DashboardStats = {
 export async function getDashboardStatsAction(): Promise<
   { success: true; stats: DashboardStats } | { success: false; error: string }
 > {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminDashboard] Creating service role client...");
     const supabase = createServiceRoleClient();

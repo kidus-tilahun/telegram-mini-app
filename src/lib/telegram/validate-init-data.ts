@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 import type { TelegramUser, ValidatedInitData } from "./types";
 
 const MAX_AUTH_AGE_SECONDS = 86_400;
@@ -17,18 +15,43 @@ function buildDataCheckString(params: URLSearchParams): string {
   return pairs.join("\n");
 }
 
-function timingSafeEqualHex(a: string, b: string): boolean {
-  try {
-    return crypto.timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
-  } catch {
-    return false;
-  }
+async function hmacSha256(key: Uint8Array, data: string): Promise<Uint8Array> {
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    key.buffer as ArrayBuffer,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    new TextEncoder().encode(data),
+  );
+  return new Uint8Array(signature);
 }
 
-export function validateTelegramInitData(
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+export async function validateTelegramInitData(
   initData: string,
   botToken: string,
-): ValidatedInitData | null {
+): Promise<ValidatedInitData | null> {
   if (!initData.trim()) {
     return null;
   }
@@ -57,16 +80,16 @@ export function validateTelegramInitData(
     return null;
   }
 
-  const secretKey = crypto
-    .createHmac("sha256", "WebAppData")
-    .update(botToken)
-    .digest();
+  // Generate secret key: HMAC-SHA256("WebAppData", botToken)
+  const secretKey = await hmacSha256(
+    new TextEncoder().encode("WebAppData"),
+    botToken,
+  );
 
+  // Calculate hash: HMAC-SHA256(secretKey, dataCheckString)
   const dataCheckString = buildDataCheckString(params);
-  const calculatedHash = crypto
-    .createHmac("sha256", secretKey)
-    .update(dataCheckString)
-    .digest("hex");
+  const calculatedHashBytes = await hmacSha256(secretKey, dataCheckString);
+  const calculatedHash = bytesToHex(calculatedHashBytes);
 
   if (!timingSafeEqualHex(calculatedHash, hash)) {
     return null;

@@ -38,13 +38,15 @@ function getDevTelegramUser(): TelegramUser | null {
   };
 }
 
-function validateInitData(initData: string): TelegramUser | null {
+async function validateInitData(
+  initData: string,
+): Promise<TelegramUser | null> {
   const botToken = getBotToken();
   if (!botToken) {
     return null;
   }
 
-  const validated = validateTelegramInitData(initData, botToken);
+  const validated = await validateTelegramInitData(initData, botToken);
   return validated?.user ?? null;
 }
 
@@ -74,7 +76,9 @@ export async function requireTelegramUser(): Promise<TelegramUser> {
   return user;
 }
 
-export function validateAndExtractUser(initData: string): TelegramUser | null {
+export async function validateAndExtractUser(
+  initData: string,
+): Promise<TelegramUser | null> {
   const devUser = getDevTelegramUser();
   if (devUser) {
     return devUser;

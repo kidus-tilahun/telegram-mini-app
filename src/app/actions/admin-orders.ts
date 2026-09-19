@@ -1,6 +1,7 @@
 "use server";
 
 import { createServiceRoleClient } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/telegram/is-admin";
 import type { Tables } from "@/types/database";
 
 export type AdminOrderItem = {
@@ -20,6 +21,12 @@ export type GetAdminOrdersResult =
   | { success: false; error: string };
 
 export async function getAdminOrdersAction(): Promise<GetAdminOrdersResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminOrders] Creating service role client...");
     const supabase = createServiceRoleClient();
@@ -67,6 +74,12 @@ export async function updateOrderStatusAction(
   orderId: string,
   status: string,
 ): Promise<UpdateOrderStatusResult> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { success: false, error: "Admin access required" };
+  }
+
   try {
     console.log("[AdminOrders] Updating order status:", { orderId, status });
     const supabase = createServiceRoleClient();

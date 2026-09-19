@@ -31,7 +31,7 @@ export async function placeOrderAction(
       return { success: false, error: "Missing Telegram initData" };
     }
 
-    const user = validateAndExtractUser(input.initData);
+    const user = await validateAndExtractUser(input.initData);
     if (!user) {
       return { success: false, error: "Invalid Telegram session" };
     }
@@ -147,7 +147,7 @@ export async function getOrderConfirmationAction(
       return { success: false, error: "Missing Telegram initData" };
     }
 
-    const user = validateAndExtractUser(initData);
+    const user = await validateAndExtractUser(initData);
     if (!user) {
       return { success: false, error: "Invalid Telegram session" };
     }

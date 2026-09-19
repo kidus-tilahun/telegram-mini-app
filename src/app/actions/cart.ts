@@ -39,12 +39,12 @@ function toCartActionResult(error: unknown): CartActionResult {
   };
 }
 
-function validateInitDataAndGetUserId(initData: string): number {
+async function validateInitDataAndGetUserId(initData: string): Promise<number> {
   if (!initData?.trim()) {
     throw new TelegramAuthError();
   }
 
-  const user = validateAndExtractUser(initData);
+  const user = await validateAndExtractUser(initData);
   if (!user) {
     throw new TelegramAuthError();
   }
@@ -58,7 +58,7 @@ export async function addToCartAction(
   initData: string,
 ): Promise<CartActionResult> {
   try {
-    const telegramUserId = validateInitDataAndGetUserId(initData);
+    const telegramUserId = await validateInitDataAndGetUserId(initData);
 
     const existingResult = await getCartItemByProductId(
       productId,
@@ -101,7 +101,7 @@ export async function updateQuantityAction(
   initData: string,
 ): Promise<CartActionResult> {
   try {
-    const telegramUserId = validateInitDataAndGetUserId(initData);
+    const telegramUserId = await validateInitDataAndGetUserId(initData);
 
     let result;
     if (quantity <= 0) {
@@ -129,7 +129,7 @@ export async function removeFromCartAction(
   initData: string,
 ): Promise<CartActionResult> {
   try {
-    const telegramUserId = validateInitDataAndGetUserId(initData);
+    const telegramUserId = await validateInitDataAndGetUserId(initData);
 
     const result = await removeFromCart(id, telegramUserId);
 
@@ -151,7 +151,7 @@ export async function getCartItemsAction(
   initData: string,
 ): Promise<GetCartItemsResult> {
   try {
-    const telegramUserId = validateInitDataAndGetUserId(initData);
+    const telegramUserId = await validateInitDataAndGetUserId(initData);
     const result = await getCartItems(telegramUserId);
     if (!result.success) {
       return { success: false, error: result.error };
@@ -172,7 +172,7 @@ export async function getCartCountAction(
   initData: string,
 ): Promise<GetCartCountResult> {
   try {
-    const telegramUserId = validateInitDataAndGetUserId(initData);
+    const telegramUserId = await validateInitDataAndGetUserId(initData);
     const result = await getCartCount(telegramUserId);
     if (!result.success) {
       return { success: false, error: result.error };
