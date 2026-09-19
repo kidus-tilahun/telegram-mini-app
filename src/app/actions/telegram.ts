@@ -19,7 +19,7 @@ export async function syncTelegramSessionAction(
     return { success: false, error: "Missing Telegram initData" };
   }
 
-  const user = validateAndExtractUser(initData);
+  const user = await validateAndExtractUser(initData);
   if (!user) {
     return { success: false, error: "Invalid Telegram initData" };
   }
