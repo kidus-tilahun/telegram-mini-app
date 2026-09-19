@@ -16,9 +16,13 @@ function buildDataCheckString(params: URLSearchParams): string {
 }
 
 async function hmacSha256(key: Uint8Array, data: string): Promise<Uint8Array> {
+  // Convert Uint8Array to ArrayBuffer to avoid SharedArrayBuffer type issues
+  const keyBuffer = new ArrayBuffer(key.length);
+  new Uint8Array(keyBuffer).set(key);
+
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
-    key.buffer as ArrayBuffer,
+    keyBuffer,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
