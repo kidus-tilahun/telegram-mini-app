@@ -67,11 +67,11 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Dashboard</h1>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
   if (error || !stats) {
     return (
-      <div className="text-center py-12 text-red-500">
+      <div className="p-4 pb-[max(env(safe-area-inset-bottom),1rem)] text-center py-12 text-red-500">
         {error || "Failed to load dashboard"}
       </div>
     );
@@ -118,7 +118,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -128,15 +128,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
         {statCards.map((card) => (
           <Link
             key={card.label}
             href={card.href}
-            className="bg-white rounded-xl border p-6 hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl border p-5 hover:shadow-md transition-shadow"
           >
             <p className="text-sm text-gray-500">{card.label}</p>
-            <p className="mt-2 text-3xl font-bold">{card.value}</p>
+            <p className="mt-2 text-2xl font-bold">{card.value}</p>
           </Link>
         ))}
       </div>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <svg
-              className="h-5 w-5 text-yellow-600"
+              className="h-5 w-5 text-yellow-600 flex-shrink-0"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                 clipRule="evenodd"
               />
             </svg>
-            <div>
+            <div className="min-w-0">
               <p className="font-medium text-yellow-800">
                 {stats.pendingOrders} order
                 {stats.pendingOrders !== 1 ? "s" : ""} pending
@@ -189,54 +189,58 @@ export default function DashboardPage() {
         {stats.recentOrders.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No orders yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Order
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Customer
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Total
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Date
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentOrders.map((order) => (
-                  <tr key={order.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">
-                      #{order.id.slice(-8)}
-                    </td>
-                    <td className="px-4 py-3">{order.customer_name}</td>
-                    <td className="px-4 py-3 font-medium">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          statusColors[order.status] ||
-                          "bg-gray-100 text-gray-800"
-                        }`}
+          <div className="divide-y">
+            {stats.recentOrders.map((order) => (
+              <Link
+                key={order.id}
+                href={`/admin/orders#${order.id}`}
+                className="block p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">
+                        #{order.id.slice(-8)}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        {order.customer_name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="font-medium text-gray-900 whitespace-nowrap">
+                      {formatCurrency(order.total)}
+                    </span>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        statusColors[order.status] ||
+                        "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                    <span className="text-sm text-gray-500 hidden sm:block">
                       {formatDate(order.created_at)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </div>

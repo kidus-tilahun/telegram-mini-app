@@ -171,7 +171,7 @@ export default function ProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Products</h1>
@@ -190,7 +190,7 @@ export default function ProductsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Products</h1>
@@ -205,7 +205,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -220,112 +220,23 @@ export default function ProductsPage() {
         </button>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-xl border shadow-sm">
+      {/* Products List - Mobile Card Layout */}
+      <div className="space-y-3">
         {products.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
             No products yet. Click "Add Product" to create your first product.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px] text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Image
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Price
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Stock
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Featured
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="h-12 w-12 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded bg-gray-100 flex items-center justify-center">
-                          <svg
-                            className="h-6 w-6 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-medium">{product.name}</td>
-                    <td className="px-4 py-3 font-medium">
-                      {formatCurrency(product.price)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={product.stock === 0 ? "text-red-600" : ""}
-                      >
-                        {product.stock}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {getStatusBadge(product.status)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {product.featured ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          Yes
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">No</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEditForm(product)}
-                          className="text-primary-600 hover:underline text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="text-red-600 hover:underline text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          products.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={openEditForm}
+              onDelete={handleDelete}
+              formatCurrency={formatCurrency}
+              getStatusBadge={getStatusBadge}
+            />
+          ))
         )}
       </div>
 
@@ -379,7 +290,7 @@ export default function ProductsPage() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Price (ETB) *
@@ -428,7 +339,7 @@ export default function ProductsPage() {
                 />
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
@@ -502,6 +413,91 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Product Card Component - Mobile-friendly card layout
+function ProductCard({
+  product,
+  onEdit,
+  onDelete,
+  formatCurrency,
+  getStatusBadge,
+}: {
+  product: Product;
+  onEdit: (product: Product) => void;
+  onDelete: (id: string) => void;
+  formatCurrency: (amount: number) => string;
+  getStatusBadge: (status: string) => React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="p-4">
+        <div className="flex gap-3">
+          {/* Product Image */}
+          <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {product.image ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <svg
+                className="h-8 w-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            )}
+          </div>
+
+          {/* Product Info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-medium truncate">{product.name}</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {formatCurrency(product.price)}
+            </p>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              {getStatusBadge(product.status)}
+              {product.featured && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  Featured
+                </span>
+              )}
+              <span
+                className={`text-xs text-gray-500 ${product.stock === 0 ? "text-red-600 font-medium" : ""}`}
+              >
+                Stock: {product.stock}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+          <button
+            onClick={() => onEdit(product)}
+            className="flex-1 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(product.id)}
+            className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

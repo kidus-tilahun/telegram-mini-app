@@ -79,7 +79,7 @@ export default function AdminSidebar() {
           </nav>
 
           {/* Footer */}
-          <div className="border-t p-4">
+          <div className="border-t p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
             <Link
               href="/"
               target="_blank"

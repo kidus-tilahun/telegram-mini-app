@@ -126,9 +126,17 @@ export default function CategoriesPage() {
     }
   }
 
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Categories</h1>
@@ -147,7 +155,7 @@ export default function CategoriesPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold">Categories</h1>
@@ -162,7 +170,7 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -177,74 +185,23 @@ export default function CategoriesPage() {
         </button>
       </div>
 
-      {/* Categories Table */}
-      <div className="bg-white rounded-xl border shadow-sm">
+      {/* Categories List - Mobile Card Layout */}
+      <div className="space-y-3">
         {categories.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
             No categories yet. Click "Add Category" to create your first
             category.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px] text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Slug
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Sort Order
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Created
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((category) => (
-                  <tr key={category.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{category.name}</td>
-                    <td className="px-4 py-3 font-mono text-sm">
-                      {category.slug}
-                    </td>
-                    <td className="px-4 py-3">{category.sort_order}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(category.created_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        },
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openEditForm(category)}
-                          className="text-primary-600 hover:underline text-sm"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(category.id)}
-                          className="text-red-600 hover:underline text-sm"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          categories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              onEdit={openEditForm}
+              onDelete={handleDelete}
+              formatDate={formatDate}
+            />
+          ))
         )}
       </div>
 
@@ -355,6 +312,58 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Category Card Component - Mobile-friendly card layout
+function CategoryCard({
+  category,
+  onEdit,
+  onDelete,
+  formatDate,
+}: {
+  category: Category;
+  onEdit: (category: Category) => void;
+  onDelete: (id: string) => void;
+  formatDate: (dateString: string) => string;
+}) {
+  return (
+    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium truncate">{category.name}</p>
+            <p className="text-sm text-gray-500 font-mono truncate">
+              {category.slug}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-gray-500">
+                Sort: {category.sort_order}
+              </span>
+              <span className="text-xs text-gray-400">
+                {formatDate(category.created_at)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+          <button
+            onClick={() => onEdit(category)}
+            className="flex-1 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(category.id)}
+            className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
