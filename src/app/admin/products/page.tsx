@@ -14,10 +14,17 @@ type Product = {
   created_at: string;
 };
 
+type Category = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 const statusOptions = ["active", "inactive", "draft"];
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -33,9 +40,11 @@ export default function ProductsPage() {
   });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   async function fetchProducts() {
@@ -53,6 +62,19 @@ export default function ProductsPage() {
       setError("Failed to fetch products");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function fetchCategories() {
+    try {
+      const response = await fetch("/api/admin/categories");
+      const result = await response.json();
+      if (result.success) {
+        setCategories(result.categories);
+      }
+    } catch {
+      // Silently fail - categories are optional for the form
+      console.error("Failed to fetch categories");
     }
   }
 
@@ -88,6 +110,52 @@ export default function ProductsPage() {
     });
     setFormError("");
     setShowForm(true);
+  }
+
+  async function handleImageUpload(file: File) {
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setFormData((prev) => ({ ...prev, image: result.url }));
+      } else {
+        setFormError(result.error || "Failed to upload image");
+      }
+    } catch {
+      setFormError("Failed to upload image");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  }
+
+  function handleCameraCapture() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment"; // Use rear camera on mobile
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        handleImageUpload(file);
+      }
+    };
+    input.click();
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -326,17 +394,63 @@ export default function ProductsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
+                  Product Image
                 </label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div className="space-y-2">
+                  {/* Image Preview */}
+                  {formData.image && (
+                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.image}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleCameraCapture}
+                      disabled={isUploadingImage}
+                      className="rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {isUploadingImage ? "Uploading..." : "📷 Take Photo"}
+                    </button>
+                    <label className="rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50 cursor-pointer">
+                      📁 Choose from Gallery
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        disabled={isUploadingImage}
+                        className="sr-only"
+                      />
+                    </label>
+                    {formData.image && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, image: "" }))
+                        }
+                        className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                      >
+                        Remove Image
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        image: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    placeholder="Or enter image URL manually: https://example.com/image.jpg"
+                  />
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -347,7 +461,10 @@ export default function ProductsPage() {
                   <select
                     value={formData.status}
                     onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
+                      setFormData((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }))
                     }
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   >
@@ -360,17 +477,26 @@ export default function ProductsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category ID
+                    Category *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.category_id}
                     onChange={(e) =>
-                      setFormData({ ...formData, category_id: e.target.value })
+                      setFormData((prev) => ({
+                        ...prev,
+                        category_id: e.target.value,
+                      }))
                     }
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Category UUID"
-                  />
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} ({cat.slug})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
