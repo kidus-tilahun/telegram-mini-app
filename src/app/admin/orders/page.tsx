@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { ChevronDown, MapPin, Phone, ShoppingBag } from "lucide-react";
+
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import AdminListSkeleton from "@/components/admin/AdminListSkeleton";
+import StatusBadge from "@/components/admin/StatusBadge";
+import ErrorState from "@/components/ui/ErrorState";
 
 type OrderItem = {
   id: string;
@@ -23,14 +30,14 @@ type Order = {
   order_items: OrderItem[];
 };
 
-const statuses = ["All", "Pending", "Processing", "Completed", "Cancelled"];
-
-const statusColors: Record<string, string> = {
-  Pending: "bg-yellow-100 text-yellow-800",
-  Processing: "bg-blue-100 text-blue-800",
-  Completed: "bg-green-100 text-green-800",
-  Cancelled: "bg-red-100 text-red-800",
-};
+const filterOptions = [
+  "All",
+  "Pending",
+  "Processing",
+  "Completed",
+  "Cancelled",
+];
+const orderStatuses = ["Pending", "Processing", "Completed", "Cancelled"];
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -38,11 +45,18 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<{
+    orderId: string;
+    message: string;
+  } | null>(null);
 
   const filteredOrders =
     filter === "All"
       ? orders
-      : orders.filter((order) => order.status === filter);
+      : orders.filter(
+          (order) => order.status.toLowerCase() === filter.toLowerCase(),
+        );
 
   useEffect(() => {
     async function fetchOrders() {
@@ -66,6 +80,9 @@ export default function OrdersPage() {
   }, []);
 
   async function updateStatus(id: string, status: string) {
+    setStatusError(null);
+    setUpdatingOrderId(id);
+
     // Optimistic update
     setOrders((current) =>
       current.map((order) => (order.id === id ? { ...order, status } : order)),
@@ -85,7 +102,10 @@ export default function OrdersPage() {
             order.id === id ? { ...order, status: order.status } : order,
           ),
         );
-        alert(result.error || "Failed to update status");
+        setStatusError({
+          orderId: id,
+          message: result.error || "Failed to update status",
+        });
       }
     } catch {
       // Revert on error
@@ -94,16 +114,10 @@ export default function OrdersPage() {
           order.id === id ? { ...order, status: order.status } : order,
         ),
       );
-      alert("Failed to update status");
+      setStatusError({ orderId: id, message: "Failed to update status" });
+    } finally {
+      setUpdatingOrderId(null);
     }
-  }
-
-  function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      minimumFractionDigits: 0,
-    }).format(amount);
   }
 
   function formatDate(dateString: string) {
@@ -114,232 +128,244 @@ export default function OrdersPage() {
     });
   }
 
-  function formatOrderId(id: string) {
-    return `#${id.slice(-8)}`;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Orders</h1>
-            <p className="text-gray-500">View and manage customer orders</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="p-8 text-center text-gray-500">Loading orders...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Orders</h1>
-            <p className="text-gray-500">View and manage customer orders</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm">
-          <div className="p-8 text-center text-red-500">{error}</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-gray-500">View and manage customer orders</p>
-        </div>
+    <>
+      <AdminHeader
+        title="Orders"
+        description="View and manage customer orders"
+      />
 
-        {/* Filter */}
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full max-w-xs rounded-lg border bg-white px-4 py-3 text-sm outline-none focus:ring-2"
-        >
-          {statuses.map((status) => (
-            <option key={status} value={status}>
+      {/* Status filter chips */}
+      <div className="no-scrollbar -mx-5 mt-6 flex gap-2 overflow-x-auto px-5">
+        {filterOptions.map((status) => {
+          const isActive = filter === status;
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setFilter(status)}
+              aria-pressed={isActive}
+              className={[
+                "inline-flex h-11 shrink-0 items-center rounded-full px-4 text-sm font-medium transition-colors active:scale-[0.98]",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-surface-elevated text-foreground active:bg-muted",
+              ].join(" ")}
+            >
               {status === "All" ? "All Orders" : status}
-            </option>
-          ))}
-        </select>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Orders List - Mobile Card Layout */}
-      <div className="space-y-3">
-        {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
-            No orders found
-          </div>
+      <div className="mt-6 space-y-3">
+        {isLoading ? (
+          <AdminListSkeleton rows={4} />
+        ) : error ? (
+          <ErrorState message={error} />
+        ) : filteredOrders.length === 0 ? (
+          <AdminEmptyState
+            icon={ShoppingBag}
+            title={
+              filter === "All"
+                ? "No orders yet"
+                : `No ${filter.toLowerCase()} orders`
+            }
+            description={
+              filter === "All"
+                ? "New customer orders will appear here."
+                : "Try a different status filter."
+            }
+          />
         ) : (
           filteredOrders.map((order) => (
             <OrderCard
               key={order.id}
               order={order}
-              expandedOrder={expandedOrder}
-              onToggleExpand={() =>
+              isExpanded={expandedOrder === order.id}
+              onToggle={() =>
                 setExpandedOrder(expandedOrder === order.id ? null : order.id)
               }
               onUpdateStatus={updateStatus}
-              formatCurrency={formatCurrency}
+              isUpdating={updatingOrderId === order.id}
+              statusError={
+                statusError?.orderId === order.id ? statusError.message : null
+              }
               formatDate={formatDate}
-              formatOrderId={formatOrderId}
-              statusColors={statusColors}
-              statuses={statuses}
             />
           ))
         )}
       </div>
-    </div>
+    </>
   );
 }
 
 // Order Card Component - Mobile-friendly card layout
 function OrderCard({
   order,
-  expandedOrder,
-  onToggleExpand,
+  isExpanded,
+  onToggle,
   onUpdateStatus,
-  formatCurrency,
+  isUpdating,
+  statusError,
   formatDate,
-  formatOrderId,
-  statusColors,
-  statuses,
 }: {
   order: Order;
-  expandedOrder: string | null;
-  onToggleExpand: () => void;
+  isExpanded: boolean;
+  onToggle: () => void;
   onUpdateStatus: (id: string, status: string) => void;
-  formatCurrency: (amount: number) => string;
+  isUpdating: boolean;
+  statusError: string | null;
   formatDate: (dateString: string) => string;
-  formatOrderId: (id: string) => string;
-  statusColors: Record<string, string>;
-  statuses: string[];
 }) {
-  const isExpanded = expandedOrder === order.id;
+  const itemCount = order.order_items.length;
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-      {/* Order Summary - Always Visible */}
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)]">
+      {/* Order summary - tap to expand */}
       <button
-        onClick={onToggleExpand}
-        className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        className="flex w-full items-center gap-3 p-4 text-left transition-colors active:bg-muted/50"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <p className="font-medium truncate">{formatOrderId(order.id)}</p>
-              <p className="text-sm text-gray-500 truncate">
-                {order.customer_name}
-              </p>
-            </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <StatusBadge status={order.status} />
+            <p className="truncate text-sm font-medium text-foreground">
+              #{order.id.slice(-8)}
+            </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <span className="font-medium text-gray-900 whitespace-nowrap">
-              {formatCurrency(order.total)}
-            </span>
-            <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                statusColors[order.status] || "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {order.status}
-            </span>
-            <span className="text-sm text-gray-500 hidden sm:block">
-              {formatDate(order.created_at)}
-            </span>
-            <span className="text-sm text-gray-400 sm:hidden">
-              {order.order_items.length} items
-            </span>
-          </div>
+          <p className="mt-1 truncate text-xs text-muted-foreground">
+            {order.customer_name} · {formatDate(order.created_at)} · {itemCount}{" "}
+            item{itemCount !== 1 ? "s" : ""}
+          </p>
         </div>
+        <p className="shrink-0 font-display text-base text-foreground tabular-nums">
+          ETB {order.total.toLocaleString()}
+        </p>
+        <ChevronDown
+          size={18}
+          strokeWidth={1.8}
+          aria-hidden
+          className={`shrink-0 text-muted-foreground transition-transform ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
-      {/* Expanded Details */}
+      {/* Expanded details */}
       {isExpanded && (
-        <div className="border-t bg-gray-50 p-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <p className="text-xs text-gray-500">Phone</p>
-              <p className="font-medium">{order.phone}</p>
+        <div className="space-y-4 border-t border-border bg-surface/60 p-4">
+          {/* Customer details */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-start gap-2.5">
+              <Phone
+                size={15}
+                strokeWidth={1.8}
+                aria-hidden
+                className="mt-0.5 shrink-0 text-muted-foreground"
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  Phone
+                </p>
+                <p className="mt-0.5 text-sm text-foreground">{order.phone}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500">Address</p>
-              <p className="font-medium text-sm">{order.delivery_address}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Checkout ID</p>
-              <p className="font-medium text-sm font-mono">
-                {order.checkout_id}
-              </p>
+            <div className="flex items-start gap-2.5">
+              <MapPin
+                size={15}
+                strokeWidth={1.8}
+                aria-hidden
+                className="mt-0.5 shrink-0 text-muted-foreground"
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  Address
+                </p>
+                <p className="mt-0.5 text-sm text-foreground">
+                  {order.delivery_address}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <p className="text-sm font-medium mb-2">Order Items</p>
-            <div className="space-y-2">
+          {/* Order items */}
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Items
+            </p>
+            <div className="mt-2 divide-y divide-border/60 overflow-hidden rounded-xl border border-border bg-card">
               {order.order_items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between text-sm py-2 border-b last:border-0"
+                  className="flex items-center justify-between gap-3 p-3"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{item.product_name}</p>
-                    <p className="text-gray-500">
-                      Qty: {item.quantity} × {formatCurrency(item.price)}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.product_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {item.quantity} × ETB {item.price.toLocaleString()}
                     </p>
                   </div>
-                  <p className="font-medium ml-4 whitespace-nowrap">
-                    {formatCurrency(item.price * item.quantity)}
+                  <p className="shrink-0 text-sm font-medium text-foreground tabular-nums">
+                    ETB {(item.price * item.quantity).toLocaleString()}
                   </p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <label className="block text-sm font-medium mb-2">
+          {/* Checkout reference */}
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Checkout ID
+            </p>
+            <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
+              {order.checkout_id}
+            </p>
+          </div>
+
+          {/* Status update */}
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Update Status
-            </label>
-            <select
-              value={order.status}
-              onChange={(e) => onUpdateStatus(order.id, e.target.value)}
-              className="w-full rounded-lg border bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              {statuses
-                .filter((s) => s !== "All")
-                .map((status) => (
-                  <option key={status} value={status}>
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {orderStatuses.map((status) => {
+                const isCurrent =
+                  order.status.toLowerCase() === status.toLowerCase();
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    disabled={isCurrent || isUpdating}
+                    onClick={() => onUpdateStatus(order.id, status)}
+                    className={[
+                      "h-11 rounded-full text-sm font-medium transition-colors",
+                      isCurrent
+                        ? "bg-primary text-primary-foreground"
+                        : "border border-border bg-surface-elevated text-foreground active:bg-muted disabled:opacity-50",
+                    ].join(" ")}
+                  >
                     {status}
-                  </option>
-                ))}
-            </select>
+                  </button>
+                );
+              })}
+            </div>
+            {statusError && (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {statusError}
+              </p>
+            )}
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }

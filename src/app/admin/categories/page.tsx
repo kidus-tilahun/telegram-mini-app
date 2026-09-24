@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { LoaderCircle, Pencil, Plus, Tag, Tags, Trash2 } from "lucide-react";
+
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import AdminListSkeleton from "@/components/admin/AdminListSkeleton";
+import AdminModal from "@/components/admin/AdminModal";
+import ErrorState from "@/components/ui/ErrorState";
 
 type Category = {
   id: string;
@@ -9,6 +16,11 @@ type Category = {
   sort_order: number;
   created_at: string;
 };
+
+const inputClasses =
+  "h-12 w-full rounded-xl border border-border bg-surface-elevated px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60";
+
+const labelClasses = "mb-1.5 block text-sm font-medium text-foreground";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -78,13 +90,12 @@ export default function CategoriesPage() {
     setIsSubmitting(true);
 
     try {
-      const url = "/api/admin/categories";
       const method = editingCategory ? "PATCH" : "POST";
       const body = editingCategory
         ? { ...formData, id: editingCategory.id }
         : formData;
 
-      const response = await fetch(url, {
+      const response = await fetch("/api/admin/categories", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -134,64 +145,36 @@ export default function CategoriesPage() {
     });
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Categories</h1>
-            <p className="text-gray-500">Manage product categories</p>
-          </div>
-          <button className="w-full sm:w-auto" disabled>
-            Loading...
-          </button>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
-          Loading categories...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Categories</h1>
-            <p className="text-gray-500">Manage product categories</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-red-500">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Categories</h1>
-          <p className="text-gray-500">Manage product categories</p>
-        </div>
-        <button
-          onClick={openCreateForm}
-          className="w-full sm:w-auto rounded-lg bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-        >
-          Add Category
-        </button>
-      </div>
+    <>
+      <AdminHeader
+        title="Categories"
+        description="Manage product categories"
+        action={
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-[0.98]"
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden />
+            Add Category
+          </button>
+        }
+      />
 
-      {/* Categories List - Mobile Card Layout */}
-      <div className="space-y-3">
-        {categories.length === 0 ? (
-          <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
-            No categories yet. Click "Add Category" to create your first
-            category.
-          </div>
+      <div className="mt-6 space-y-3">
+        {isLoading ? (
+          <AdminListSkeleton rows={3} />
+        ) : error ? (
+          <ErrorState message={error} />
+        ) : categories.length === 0 ? (
+          <AdminEmptyState
+            icon={Tags}
+            title="No categories yet"
+            description="Create your first category to organize your catalog."
+            actionLabel="Add Category"
+            onAction={openCreateForm}
+          />
         ) : (
           categories.map((category) => (
             <CategoryCard
@@ -207,112 +190,110 @@ export default function CategoriesPage() {
 
       {/* Category Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 md:items-center">
-          <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl">
-            <div className="border-b p-4 flex items-center justify-between sticky top-0 bg-white">
-              <h2 className="text-lg font-semibold">
-                {editingCategory ? "Edit Category" : "Add Category"}
-              </h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="p-2 text-gray-500 hover:text-gray-700"
+        <AdminModal
+          title={editingCategory ? "Edit Category" : "Add Category"}
+          onClose={() => setShowForm(false)}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4 pb-2">
+            {formError && (
+              <div
+                role="alert"
+                className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                {formError}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="category-name" className={labelClasses}>
+                Name{" "}
+                <span className="text-destructive" aria-hidden>
+                  *
+                </span>
+              </label>
+              <input
+                id="category-name"
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={inputClasses}
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {formError && (
-                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  {formError}
-                </div>
-              )}
+            <div>
+              <label htmlFor="category-slug" className={labelClasses}>
+                Slug{" "}
+                <span className="text-destructive" aria-hidden>
+                  *
+                </span>
+              </label>
+              <input
+                id="category-slug"
+                type="text"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
+                className={inputClasses}
+                required
+                placeholder="lowercase-with-dashes"
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                />
-              </div>
+            <div>
+              <label htmlFor="category-sort" className={labelClasses}>
+                Sort Order
+              </label>
+              <input
+                id="category-sort"
+                type="number"
+                value={formData.sort_order}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    sort_order: parseInt(e.target.value) || 0,
+                  })
+                }
+                className={inputClasses}
+              />
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Slug *
-                </label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) =>
-                    setFormData({ ...formData, slug: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  required
-                  placeholder="lowercase-with-dashes"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort Order
-                </label>
-                <input
-                  type="number"
-                  value={formData.sort_order}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      sort_order: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-lg bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-                >
-                  {isSubmitting
-                    ? "Saving..."
-                    : editingCategory
-                      ? "Update"
-                      : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex gap-3 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="h-12 flex-1 rounded-full border border-border text-sm font-medium text-foreground transition-colors active:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle
+                      size={16}
+                      className="animate-spin"
+                      aria-hidden
+                    />
+                    Saving…
+                  </>
+                ) : editingCategory ? (
+                  "Update Category"
+                ) : (
+                  "Create Category"
+                )}
+              </button>
+            </div>
+          </form>
+        </AdminModal>
       )}
-    </div>
+    </>
   );
 }
 
@@ -329,41 +310,46 @@ function CategoryCard({
   formatDate: (dateString: string) => string;
 }) {
   return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{category.name}</p>
-            <p className="text-sm text-gray-500 font-mono truncate">
-              {category.slug}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-gray-500">
-                Sort: {category.sort_order}
-              </span>
-              <span className="text-xs text-gray-400">
-                {formatDate(category.created_at)}
-              </span>
-            </div>
-          </div>
+    <article className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-3">
+        <div
+          aria-hidden
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground"
+        >
+          <Tag size={18} strokeWidth={1.8} />
         </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t">
-          <button
-            onClick={() => onEdit(category)}
-            className="flex-1 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(category.id)}
-            className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            Delete
-          </button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-foreground">
+            {category.name}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            /{category.slug} · Sort {category.sort_order}
+          </p>
         </div>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {formatDate(category.created_at)}
+        </span>
       </div>
-    </div>
+
+      {/* Actions */}
+      <div className="mt-4 flex gap-2 border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={() => onEdit(category)}
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border text-sm font-medium text-foreground transition-colors active:bg-muted"
+        >
+          <Pencil size={15} strokeWidth={1.8} aria-hidden />
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(category.id)}
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-destructive/30 text-sm font-medium text-destructive transition-colors active:bg-destructive/10"
+        >
+          <Trash2 size={15} strokeWidth={1.8} aria-hidden />
+          Delete
+        </button>
+      </div>
+    </article>
   );
 }

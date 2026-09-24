@@ -1,6 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Camera,
+  ImagePlus,
+  LoaderCircle,
+  Package,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
+
+import AdminHeader from "@/components/admin/AdminHeader";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import AdminListSkeleton from "@/components/admin/AdminListSkeleton";
+import AdminModal from "@/components/admin/AdminModal";
+import Badge from "@/components/ui/Badge";
+import ErrorState from "@/components/ui/ErrorState";
 
 type Product = {
   id: string;
@@ -21,6 +37,11 @@ type Category = {
 };
 
 const statusOptions = ["active", "inactive", "draft"];
+
+const inputClasses =
+  "h-12 w-full rounded-xl border border-border bg-surface-elevated px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60";
+
+const labelClasses = "mb-1.5 block text-sm font-medium text-foreground";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -115,12 +136,12 @@ export default function ProductsPage() {
   async function handleImageUpload(file: File) {
     setIsUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const uploadForm = new FormData();
+      uploadForm.append("file", file);
 
       const response = await fetch("/api/admin/upload-image", {
         method: "POST",
-        body: formData,
+        body: uploadForm,
       });
 
       const result = await response.json();
@@ -164,15 +185,12 @@ export default function ProductsPage() {
     setIsSubmitting(true);
 
     try {
-      const url = editingProduct
-        ? "/api/admin/products"
-        : "/api/admin/products";
       const method = editingProduct ? "PATCH" : "POST";
       const body = editingProduct
         ? { ...formData, id: editingProduct.id }
         : formData;
 
-      const response = await fetch(url, {
+      const response = await fetch("/api/admin/products", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -214,95 +232,48 @@ export default function ProductsPage() {
     }
   }
 
-  function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("en-ET", {
-      style: "currency",
-      currency: "ETB",
-      minimumFractionDigits: 0,
-    }).format(amount);
-  }
-
-  function getStatusBadge(status: string) {
-    const colors: Record<string, string> = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      draft: "bg-yellow-100 text-yellow-800",
-    };
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-800"}`}
-      >
-        {status}
-      </span>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Products</h1>
-            <p className="text-gray-500">Manage your product catalog</p>
-          </div>
-          <button className="w-full sm:w-auto" disabled>
-            Loading...
-          </button>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
-          Loading products...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Products</h1>
-            <p className="text-gray-500">Manage your product catalog</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-red-500">
-          {error}
-        </div>
-      </div>
-    );
+  function categoryLabel(id: string) {
+    return categories.find((c) => c.id === id)?.name;
   }
 
   return (
-    <div className="space-y-6 p-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-gray-500">Manage your product catalog</p>
-        </div>
-        <button
-          onClick={openCreateForm}
-          className="w-full sm:w-auto rounded-lg bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-        >
-          Add Product
-        </button>
-      </div>
+    <>
+      <AdminHeader
+        title="Products"
+        description="Manage your product catalog"
+        action={
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-[0.98]"
+          >
+            <Plus size={16} strokeWidth={2} aria-hidden />
+            Add Product
+          </button>
+        }
+      />
 
-      {/* Products List - Mobile Card Layout */}
-      <div className="space-y-3">
-        {products.length === 0 ? (
-          <div className="bg-white rounded-xl border shadow-sm p-8 text-center text-gray-500">
-            No products yet. Click "Add Product" to create your first product.
-          </div>
+      <div className="mt-6 space-y-3">
+        {isLoading ? (
+          <AdminListSkeleton rows={4} />
+        ) : error ? (
+          <ErrorState message={error} />
+        ) : products.length === 0 ? (
+          <AdminEmptyState
+            icon={Package}
+            title="No products yet"
+            description="Add your first product to start building your catalog."
+            actionLabel="Add Product"
+            onAction={openCreateForm}
+          />
         ) : (
           products.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
+              categoryLabel={categoryLabel(product.category_id)}
               onEdit={openEditForm}
               onDelete={handleDelete}
-              formatCurrency={formatCurrency}
-              getStatusBadge={getStatusBadge}
             />
           ))
         )}
@@ -310,320 +281,342 @@ export default function ProductsPage() {
 
       {/* Product Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 md:items-center">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl">
-            <div className="border-b p-4 flex items-center justify-between sticky top-0 bg-white">
-              <h2 className="text-lg font-semibold">
-                {editingProduct ? "Edit Product" : "Add Product"}
-              </h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="p-2 text-gray-500 hover:text-gray-700"
+        <AdminModal
+          title={editingProduct ? "Edit Product" : "Add Product"}
+          onClose={() => setShowForm(false)}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4 pb-2">
+            {formError && (
+              <div
+                role="alert"
+                className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
               >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                {formError}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="product-name" className={labelClasses}>
+                Name{" "}
+                <span className="text-destructive" aria-hidden>
+                  *
+                </span>
+              </label>
+              <input
+                id="product-name"
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className={inputClasses}
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {formError && (
-                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                  {formError}
-                </div>
-              )}
-
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
+                <label htmlFor="product-price" className={labelClasses}>
+                  Price (ETB){" "}
+                  <span className="text-destructive" aria-hidden>
+                    *
+                  </span>
                 </label>
                 <input
-                  type="text"
-                  value={formData.name}
+                  id="product-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, price: e.target.value })
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className={inputClasses}
                   required
                 />
               </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price (ETB) *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stock *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stock: e.target.value })
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Image
+                <label htmlFor="product-stock" className={labelClasses}>
+                  Stock{" "}
+                  <span className="text-destructive" aria-hidden>
+                    *
+                  </span>
                 </label>
-                <div className="space-y-2">
-                  {/* Image Preview */}
-                  {formData.image && (
-                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border">
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
+                <input
+                  id="product-stock"
+                  type="number"
+                  min="0"
+                  value={formData.stock}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock: e.target.value })
+                  }
+                  className={inputClasses}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <span className={labelClasses}>Product Image</span>
+              <div className="space-y-3">
+                {/* Image Preview */}
+                {formData.image && (
+                  <div className="relative h-40 w-32 overflow-hidden rounded-xl border border-border bg-muted">
+                    <img
+                      src={formData.image}
+                      alt="Product preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCameraCapture}
+                    disabled={isUploadingImage}
+                    className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-surface-elevated px-4 text-sm font-medium text-foreground transition-colors active:bg-muted disabled:opacity-50"
+                  >
+                    {isUploadingImage ? (
+                      <LoaderCircle
+                        size={15}
+                        className="animate-spin"
+                        aria-hidden
                       />
-                    </div>
-                  )}
-                  <div className="flex gap-2 flex-wrap">
+                    ) : (
+                      <Camera size={15} strokeWidth={1.8} aria-hidden />
+                    )}
+                    {isUploadingImage ? "Uploading…" : "Take Photo"}
+                  </button>
+                  <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border border-border bg-surface-elevated px-4 text-sm font-medium text-foreground transition-colors active:bg-muted">
+                    <ImagePlus size={15} strokeWidth={1.8} aria-hidden />
+                    Choose from Gallery
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      disabled={isUploadingImage}
+                      className="sr-only"
+                    />
+                  </label>
+                  {formData.image && (
                     <button
                       type="button"
-                      onClick={handleCameraCapture}
-                      disabled={isUploadingImage}
-                      className="rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50 disabled:opacity-50"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, image: "" }))
+                      }
+                      className="inline-flex h-11 items-center gap-2 rounded-full border border-destructive/30 px-4 text-sm font-medium text-destructive transition-colors active:bg-destructive/10"
                     >
-                      {isUploadingImage ? "Uploading..." : "📷 Take Photo"}
+                      <Trash2 size={15} strokeWidth={1.8} aria-hidden />
+                      Remove Image
                     </button>
-                    <label className="rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50 cursor-pointer">
-                      📁 Choose from Gallery
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        disabled={isUploadingImage}
-                        className="sr-only"
-                      />
-                    </label>
-                    {formData.image && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({ ...prev, image: "" }))
-                        }
-                        className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-                      >
-                        Remove Image
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="url"
-                    value={formData.image}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        image: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Or enter image URL manually: https://example.com/image.jpg"
-                  />
+                  )}
                 </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        status: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  >
-                    {statusOptions.map((s) => (
-                      <option key={s} value={s}>
-                        {s.charAt(0).toUpperCase() + s.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category *
-                  </label>
-                  <select
-                    value={formData.category_id}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        category_id: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name} ({cat.slug})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  id="featured"
-                  checked={formData.featured}
+                  type="url"
+                  aria-label="Image URL"
+                  value={formData.image}
                   onChange={(e) =>
-                    setFormData({ ...formData, featured: e.target.checked })
+                    setFormData((prev) => ({
+                      ...prev,
+                      image: e.target.value,
+                    }))
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  className={inputClasses}
+                  placeholder="Or enter image URL manually"
                 />
-                <label htmlFor="featured" className="text-sm text-gray-700">
-                  Featured product
-                </label>
               </div>
+            </div>
 
-              <div className="flex gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 rounded-lg border bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="product-status" className={labelClasses}>
+                  Status
+                </label>
+                <select
+                  id="product-status"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                  className={inputClasses}
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-lg bg-primary-600 px-4 py-3 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-                >
-                  {isSubmitting
-                    ? "Saving..."
-                    : editingProduct
-                      ? "Update"
-                      : "Create"}
-                </button>
+                  {statusOptions.map((s) => (
+                    <option key={s} value={s}>
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
+              <div>
+                <label htmlFor="product-category" className={labelClasses}>
+                  Category{" "}
+                  <span className="text-destructive" aria-hidden>
+                    *
+                  </span>
+                </label>
+                <select
+                  id="product-category"
+                  value={formData.category_id}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      category_id: e.target.value,
+                    }))
+                  }
+                  className={inputClasses}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name} ({cat.slug})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface-elevated px-4 transition-colors active:bg-muted">
+              <input
+                type="checkbox"
+                id="product-featured"
+                checked={formData.featured}
+                onChange={(e) =>
+                  setFormData({ ...formData, featured: e.target.checked })
+                }
+                className="h-5 w-5 rounded accent-primary"
+              />
+              <span className="text-sm font-medium text-foreground">
+                Featured product
+              </span>
+            </label>
+
+            <div className="flex gap-3 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="h-12 flex-1 rounded-full border border-border text-sm font-medium text-foreground transition-colors active:bg-muted"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle
+                      size={16}
+                      className="animate-spin"
+                      aria-hidden
+                    />
+                    Saving…
+                  </>
+                ) : editingProduct ? (
+                  "Update Product"
+                ) : (
+                  "Create Product"
+                )}
+              </button>
+            </div>
+          </form>
+        </AdminModal>
       )}
-    </div>
+    </>
   );
 }
 
 // Product Card Component - Mobile-friendly card layout
 function ProductCard({
   product,
+  categoryLabel,
   onEdit,
   onDelete,
-  formatCurrency,
-  getStatusBadge,
 }: {
   product: Product;
+  categoryLabel?: string;
   onEdit: (product: Product) => void;
   onDelete: (id: string) => void;
-  formatCurrency: (amount: number) => string;
-  getStatusBadge: (status: string) => React.ReactNode;
 }) {
-  return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <div className="p-4">
-        <div className="flex gap-3">
-          {/* Product Image */}
-          <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {product.image ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <svg
-                className="h-8 w-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            )}
-          </div>
+  const statusVariant =
+    product.status === "active"
+      ? "success"
+      : product.status === "draft"
+        ? "accent"
+        : "neutral";
 
-          {/* Product Info */}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{product.name}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {formatCurrency(product.price)}
-            </p>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              {getStatusBadge(product.status)}
-              {product.featured && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  Featured
-                </span>
-              )}
-              <span
-                className={`text-xs text-gray-500 ${product.stock === 0 ? "text-red-600 font-medium" : ""}`}
-              >
+  return (
+    <article className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+      <div className="flex gap-3">
+        {/* Product Image */}
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center text-muted-foreground">
+              <Package size={22} strokeWidth={1.5} aria-hidden />
+            </div>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">
+            {product.name}
+          </p>
+          <p className="mt-1 flex items-baseline gap-1.5">
+            <span className="font-display text-base text-foreground tabular-nums">
+              ETB {product.price.toLocaleString()}
+            </span>
+            {categoryLabel && (
+              <span className="truncate text-xs text-muted-foreground">
+                {categoryLabel}
+              </span>
+            )}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <Badge variant={statusVariant}>
+              {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+            </Badge>
+            {product.featured && <Badge variant="accent">Featured</Badge>}
+            {product.stock === 0 ? (
+              <Badge variant="destructive">Out of stock</Badge>
+            ) : (
+              <span className="text-xs text-muted-foreground tabular-nums">
                 Stock: {product.stock}
               </span>
-            </div>
+            )}
           </div>
         </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t">
-          <button
-            onClick={() => onEdit(product)}
-            className="flex-1 rounded-lg border bg-white px-4 py-2 text-sm font-medium text-primary-600 hover:bg-gray-50"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(product.id)}
-            className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            Delete
-          </button>
-        </div>
       </div>
-    </div>
+
+      {/* Actions */}
+      <div className="mt-4 flex gap-2 border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={() => onEdit(product)}
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border text-sm font-medium text-foreground transition-colors active:bg-muted"
+        >
+          <Pencil size={15} strokeWidth={1.8} aria-hidden />
+          Edit
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(product.id)}
+          className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-destructive/30 text-sm font-medium text-destructive transition-colors active:bg-destructive/10"
+        >
+          <Trash2 size={15} strokeWidth={1.8} aria-hidden />
+          Delete
+        </button>
+      </div>
+    </article>
   );
 }

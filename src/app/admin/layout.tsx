@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/telegram/is-admin";
-import AdminSidebar from "@/components/AdminSidebar";
+import AdminNav from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({
   children,
@@ -15,12 +15,13 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminSidebar />
-      {/* Main content */}
-      <main className="min-w-0 flex-1 md:ml-64">
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
-      </main>
+    <div className="min-h-dvh bg-background">
+      <AdminNav />
+      <div className="md:pl-64">
+        <main className="mx-auto w-full max-w-md px-5 pb-[calc(3rem+env(safe-area-inset-bottom))] pt-4 md:max-w-3xl md:px-8 md:pb-16 md:pt-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
