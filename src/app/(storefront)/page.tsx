@@ -5,6 +5,7 @@ import CategoryChips from "@/components/CategoryChips";
 import PromoBanner from "@/components/PromoBanner";
 import MembershipBanner from "@/components/MembershipBanner";
 import BottomNavigation from "@/components/BottomNavigation";
+import ErrorState from "@/components/ui/ErrorState";
 import { getProducts } from "@/lib/repositories/products";
 import { getStore } from "@/lib/repositories/store";
 import { getCategories } from "@/lib/repositories/categories";
@@ -30,7 +31,7 @@ export default async function Home() {
     featuredProductsError ||
     newArrivalsError
   ) {
-    return <p>Failed to load data.</p>;
+    return <ErrorState message="Failed to load data." />;
   }
   return (
     <main>

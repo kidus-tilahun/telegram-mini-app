@@ -26,6 +26,14 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  const chipClass = (isActive: boolean) =>
+    [
+      "shrink-0 rounded-full px-4 py-2.5 text-sm transition-colors",
+      isActive
+        ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+        : "border border-border bg-surface-elevated text-foreground active:bg-muted",
+    ].join(" ");
+
   return (
     <section className="mt-5">
       <div
@@ -35,11 +43,8 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
       >
         <button
           onClick={() => handleCategory("All")}
-          className={
-            active === "All"
-              ? "rounded-full bg-primary px-4 py-2 text-primary-foreground"
-              : "rounded-full border px-4 py-2"
-          }
+          aria-pressed={active === "All"}
+          className={chipClass(active === "All")}
         >
           All
         </button>
@@ -48,11 +53,8 @@ export default function CategoryFilter({ categories }: CategoryFilterProps) {
           <button
             key={category.id}
             onClick={() => handleCategory(category.slug)}
-            className={
-              active === category.slug
-                ? "rounded-full bg-primary px-4 py-2 text-primary-foreground"
-                : "rounded-full border px-4 py-2"
-            }
+            aria-pressed={active === category.slug}
+            className={chipClass(active === category.slug)}
           >
             {category.name}
           </button>

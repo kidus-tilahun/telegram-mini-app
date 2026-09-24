@@ -5,6 +5,9 @@ import type { Product } from "@/types/product";
 import QuantitySelector from "./QuantitySelector";
 import Link from "next/link";
 import AddToCartButton from "./AddToCartButton";
+import { ChevronLeft } from "lucide-react";
+import Badge from "@/components/ui/Badge";
+import Price from "@/components/ui/Price";
 
 interface ProductDetailsProps {
   product: Product;
@@ -25,9 +28,9 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       <header className="flex items-center px-4 py-3">
         <Link
           href="/shop"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex min-h-11 items-center gap-1 rounded-lg text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <span>←</span>
+          <ChevronLeft size={18} aria-hidden />
           <span>Back</span>
         </Link>
       </header>
@@ -41,7 +44,7 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
       />
       <article className="px-5 pt-6 animate-fade-up space-y-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
+          <p className="mb-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             Boutique Collection
           </p>
           <h1 className="font-display text-3xl leading-tight text-foreground">
@@ -49,23 +52,22 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           </h1>
         </div>
 
-        <div className="flex items-baseline justify-between gap-3 py-2 border-b border-border">
-          <p className="shrink-0 font-display text-3xl font-medium text-foreground">
-            ETB {product.price.toLocaleString()}
-          </p>
+        <div className="flex items-center justify-between gap-3 border-b border-border py-2">
+          <Price
+            value={product.price}
+            className="shrink-0 font-display text-3xl font-medium text-foreground"
+          />
           {product.stock > 0 ? (
-            <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-              In Stock
-            </span>
+            <Badge variant="success">In Stock</Badge>
           ) : (
-            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-              Out of Stock
-            </span>
+            <Badge variant="destructive">Out of Stock</Badge>
           )}
         </div>
 
         <div className="py-2">
-          <p className="text-xs text-muted-foreground mb-3">Quantity</p>
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Quantity
+          </p>
           <QuantitySelector
             quantity={quantity}
             increase={increase}
@@ -73,13 +75,11 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           />
         </div>
       </article>
-      <div className="fixed inset-x-0 bottom-24 z-30 px-4">
-        <AddToCartButton
-          productId={product.id}
-          quantity={quantity}
-          stock={product.stock}
-        />
-      </div>
+      <AddToCartButton
+        productId={product.id}
+        quantity={quantity}
+        stock={product.stock}
+      />
     </section>
   );
 }

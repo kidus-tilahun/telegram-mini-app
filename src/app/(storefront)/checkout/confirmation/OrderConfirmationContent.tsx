@@ -4,6 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { getOrderConfirmationAction } from "@/app/actions/checkout";
 import type { OrderConfirmation as OrderConfirmationType } from "@/app/actions/checkout";
 import OrderConfirmation from "@/components/OrderConfirmation";
+import PageLoader from "@/components/ui/PageLoader";
+import ErrorState from "@/components/ui/ErrorState";
 
 export default function OrderConfirmationContent() {
   const searchParams = useSearchParams();
@@ -52,31 +54,19 @@ export default function OrderConfirmationContent() {
   }, [orderId]);
 
   if (loading) {
-    return (
-      <main className="flex items-center justify-center min-h-[40vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-      </main>
-    );
+    return <PageLoader label="Loading your order…" />;
   }
 
   if (error) {
-    return (
-      <main className="p-4">
-        <p className="text-red-600">{error}</p>
-      </main>
-    );
+    return <ErrorState message={error} />;
   }
 
   if (!order) {
-    return (
-      <main className="p-4">
-        <p>Order not found.</p>
-      </main>
-    );
+    return <ErrorState message="Order not found." />;
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 py-6">
+    <main className="mx-auto max-w-md px-5 py-6">
       <OrderConfirmation order={order} />
     </main>
   );

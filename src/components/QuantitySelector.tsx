@@ -1,6 +1,5 @@
 "use client";
-import { Minus } from "lucide-react";
-import { Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 
 interface QuantitySelectorProps {
   quantity: number;
@@ -14,30 +13,28 @@ export default function QuantitySelector({
   decrease,
 }: QuantitySelectorProps) {
   return (
-    <div>
-      <section className="mt-6">
-        <h2 className="font-display text-lg">Quantity</h2>
-        <div className="mt-2 inline-flex items-center rounded-full border border-border bg-surface-elevated">
-          <button
-            onClick={decrease}
-            aria-label="Decrease"
-            className="grid h-11 w-11 place-items-center text-foreground"
-          >
-            <Minus size={16} />
-          </button>
-          <span className="min-w-8 text-center text-sm font-medium">
-            {quantity}
-          </span>
+    <div className="inline-flex items-center rounded-full border border-border bg-surface-elevated shadow-[var(--shadow-soft)]">
+      <button
+        onClick={decrease}
+        aria-label="Decrease quantity"
+        className="grid h-11 w-11 place-items-center rounded-full text-foreground transition-colors active:bg-muted"
+      >
+        <Minus size={16} aria-hidden />
+      </button>
+      <span
+        className="min-w-8 text-center text-sm font-medium tabular-nums"
+        aria-live="polite"
+      >
+        {quantity}
+      </span>
 
-          <button
-            onClick={increase}
-            aria-label="Increase"
-            className="grid h-11 w-11 place-items-center text-foreground"
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-      </section>
+      <button
+        onClick={increase}
+        aria-label="Increase quantity"
+        className="grid h-11 w-11 place-items-center rounded-full text-foreground transition-colors active:bg-muted"
+      >
+        <Plus size={16} aria-hidden />
+      </button>
     </div>
   );
 }

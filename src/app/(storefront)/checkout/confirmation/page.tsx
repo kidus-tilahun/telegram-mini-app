@@ -1,15 +1,10 @@
 import { Suspense } from "react";
 import OrderConfirmationContent from "./OrderConfirmationContent";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function OrderConfirmationPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="flex items-center justify-center min-h-[40vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-        </main>
-      }
-    >
+    <Suspense fallback={<PageLoader label="Loading your order…" />}>
       <OrderConfirmationContent />
     </Suspense>
   );

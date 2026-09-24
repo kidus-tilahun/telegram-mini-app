@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { addToCartAction } from "@/app/actions/cart";
 import { useTelegramSync } from "./TelegramProvider";
 import { useRouter } from "next/navigation";
+import { ShoppingBag } from "lucide-react";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -50,28 +51,32 @@ export default function AddToCartButton({
   return (
     <div className="fixed inset-x-0 bottom-[calc(4rem+max(env(safe-area-inset-bottom),1rem))] z-30 mx-auto max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3">
       {error && (
-        <p className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-700">
+        <p
+          role="alert"
+          className="mb-2 rounded-xl bg-destructive/10 px-3 py-2 text-center text-sm text-destructive"
+        >
           {error}
         </p>
       )}
-      <div className="bg-gray-400 flex items-center gap-3 rounded-full p-2 pl-5 shadow-[var(--shadow-float)]">
-        <button
-          disabled={isMutating || isSyncPending || isOutOfStock}
-          onClick={handleAddToCart}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-black px-6 text-sm font-medium text-white transition-transform active:scale-95 disabled:opacity-50"
-        >
-          {isMutating || isSyncPending ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              {isSyncPending ? "Connecting..." : "Adding..."}
-            </>
-          ) : isOutOfStock ? (
-            "Out of Stock"
-          ) : (
-            "Add to Cart"
-          )}
-        </button>
-      </div>
+      <button
+        disabled={isMutating || isSyncPending || isOutOfStock}
+        onClick={handleAddToCart}
+        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-[0.98] disabled:opacity-50"
+      >
+        {isMutating || isSyncPending ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {isSyncPending ? "Connecting..." : "Adding..."}
+          </>
+        ) : isOutOfStock ? (
+          "Out of Stock"
+        ) : (
+          <>
+            <ShoppingBag size={18} aria-hidden />
+            Add to Cart
+          </>
+        )}
+      </button>
     </div>
   );
 }

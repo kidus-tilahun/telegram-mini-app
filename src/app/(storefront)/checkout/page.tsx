@@ -6,6 +6,8 @@ import { getCartItemsAction, getCartCountAction } from "@/app/actions/cart";
 import BottomNavigation from "@/components/BottomNavigation";
 import CheckoutForm from "@/components/CheckoutForm";
 import EmptyCart from "@/components/EmptyCart";
+import PageLoader from "@/components/ui/PageLoader";
+import ErrorState from "@/components/ui/ErrorState";
 
 export default function CheckoutPage() {
   const [items, setItems] = useState<
@@ -73,15 +75,11 @@ export default function CheckoutPage() {
   }, []);
 
   if (loading) {
-    return (
-      <main className="flex items-center justify-center min-h-[40vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-      </main>
-    );
+    return <PageLoader label="Preparing checkout…" />;
   }
 
   if (error) {
-    return <p className="mx-4 mt-4 text-red-600">{error}</p>;
+    return <ErrorState message={error} />;
   }
 
   const cartItems = items ?? [];
@@ -97,8 +95,8 @@ export default function CheckoutPage() {
 
   return (
     <main className="pb-32">
-      <div className="mx-auto max-w-md px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+      <div className="mx-auto max-w-md px-5 py-6">
+        <h1 className="mb-6 font-display text-3xl text-foreground">Checkout</h1>
         <CheckoutForm items={cartItems} total={total} />
       </div>
       <BottomNavigation cartCount={count} />

@@ -10,17 +10,17 @@ interface HeaderProps {
 export default function Header({ store }: HeaderProps) {
   return (
     <header className="flex items-center justify-between px-5 py-3">
-      <Link href="/" className="flex items-center gap-2.5">
+      <Link href="/" className="flex min-h-11 items-center gap-2.5 rounded-xl">
         <div
           aria-hidden
-          className="grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground"
+          className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-primary text-primary-foreground ring-1 ring-border"
         >
           <Image
             src={store.logo_url}
-            alt={`${store.store_name} logo`}
-            width={36}
-            height={36}
-            className="w-12 h-12 object-cover overflow-hidden rounded-full"
+            alt=""
+            width={48}
+            height={48}
+            className="h-full w-full object-cover"
           />
         </div>
         <div className="leading-tight">
@@ -36,9 +36,9 @@ export default function Header({ store }: HeaderProps) {
       <Link
         href="/shop"
         aria-label="Search products"
-        className="grid h-11 w-11 place-items-center rounded-full bg-slate-200 text-foreground shadow-[var(--shadow-soft)]"
+        className="grid h-11 w-11 place-items-center rounded-full bg-surface text-foreground shadow-[var(--shadow-soft)] transition-transform active:scale-95"
       >
-        <Search size={18} strokeWidth={1.8} />
+        <Search size={18} strokeWidth={1.8} aria-hidden />
       </Link>
     </header>
   );

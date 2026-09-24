@@ -1,5 +1,6 @@
 import ProductDetails from "@/components/ProductDetails";
 import RelatedProducts from "@/components/RelatedProducts";
+import ErrorState from "@/components/ui/ErrorState";
 import { getProductById } from "@/lib/repositories/products";
 import { getCartCountFromCookie } from "@/lib/repositories/cart";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -17,7 +18,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { count } = await getCartCountFromCookie();
 
   if (error || !product) {
-    return <h1>Product not found</h1>;
+    return <ErrorState message="Product not found." />;
   }
   return (
     <main>

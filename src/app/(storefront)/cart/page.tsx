@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import BottomNavigation from "@/components/BottomNavigation";
 import CartClient from "@/components/CartClient";
 import EmptyCart from "@/components/EmptyCart";
+import PageLoader from "@/components/ui/PageLoader";
+import ErrorState from "@/components/ui/ErrorState";
 import { getCartItemsAction, getCartCountAction } from "@/app/actions/cart";
 
 import type { CartItem } from "@/types/cart";
@@ -54,15 +56,11 @@ export default function CartPage() {
   }, []);
 
   if (loading) {
-    return (
-      <main className="flex items-center justify-center min-h-[40vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-      </main>
-    );
+    return <PageLoader label="Loading your bag…" />;
   }
 
   if (error) {
-    return <p className="mx-4 mt-4 text-red-600">{error}</p>;
+    return <ErrorState message={error} />;
   }
 
   const cartItems = items ?? [];

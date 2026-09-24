@@ -5,6 +5,7 @@ import type { CartItem } from "@/types/cart";
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import Price from "@/components/ui/Price";
 
 interface CartItemProps {
   item: CartItem;
@@ -22,7 +23,7 @@ function CartItemComponent({
   disabled,
 }: CartItemProps) {
   return (
-    <article className="flex gap-3 rounded-2xl bg-surface-elevated p-3 shadow-[var(--shadow-soft)]">
+    <article className="flex gap-3 rounded-2xl border border-border bg-card p-3 shadow-[var(--shadow-soft)]">
       <Link href={`/shop/${item.products.id}`} className="shrink-0">
         <Image
           src={item.products.image}
@@ -42,38 +43,42 @@ function CartItemComponent({
           <button
             disabled={disabled}
             onClick={onDelete}
-            className="rounded-full p-2 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={`Remove ${item.products.name} from cart`}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Trash2 size={16} />
+            <Trash2 size={16} aria-hidden />
           </button>
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-3">
-          <div className="inline-flex items-center rounded-full border border-border">
+          <div className="inline-flex items-center rounded-full border border-border bg-surface-elevated">
             <button
               disabled={disabled}
               onClick={onDecrease}
-              className="h-8 w-8 rounded-full border transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Decrease quantity"
+              className="grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors active:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Minus size={14} />
+              <Minus size={14} aria-hidden />
             </button>
 
-            <span className="min-w-8 text-center text-sm font-medium">
+            <span className="min-w-8 text-center text-sm font-medium tabular-nums">
               {item.quantity}
             </span>
 
             <button
               disabled={disabled}
               onClick={onIncrease}
-              className="h-8 w-8 rounded-full border transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Increase quantity"
+              className="grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors active:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Plus size={14} />
+              <Plus size={14} aria-hidden />
             </button>
           </div>
 
-          <p className="font-display text-base text-foreground">
-            ${(item.products.price * item.quantity).toFixed(2)}
-          </p>
+          <Price
+            value={item.products.price * item.quantity}
+            className="font-display text-base text-foreground"
+          />
         </div>
       </div>
     </article>

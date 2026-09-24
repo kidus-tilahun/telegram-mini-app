@@ -82,36 +82,47 @@ export default function CheckoutForm({ items, total }: CheckoutFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Customer Information</h2>
+        <h2 className="font-display text-xl text-foreground">
+          Customer Information
+        </h2>
 
         <div>
           <label
             htmlFor="customerName"
-            className="block text-sm font-medium mb-1"
+            className="mb-1.5 block text-sm font-medium text-foreground"
           >
-            Full Name *
+            Full Name{" "}
+            <span aria-hidden className="text-destructive">
+              *
+            </span>
           </label>
           <input
             id="customerName"
             type="text"
             value={formData.customerName}
             onChange={(e) => handleChange("customerName", e.target.value)}
-            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-12 w-full rounded-xl border border-border bg-surface-elevated px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
             placeholder="Enter your full name"
             disabled={isPending}
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-1">
-            Phone Number *
+          <label
+            htmlFor="phone"
+            className="mb-1.5 block text-sm font-medium text-foreground"
+          >
+            Phone Number{" "}
+            <span aria-hidden className="text-destructive">
+              *
+            </span>
           </label>
           <input
             id="phone"
             type="tel"
             value={formData.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
-            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-12 w-full rounded-xl border border-border bg-surface-elevated px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
             placeholder="Enter your phone number"
             disabled={isPending}
           />
@@ -120,58 +131,66 @@ export default function CheckoutForm({ items, total }: CheckoutFormProps) {
         <div>
           <label
             htmlFor="deliveryAddress"
-            className="block text-sm font-medium mb-1"
+            className="mb-1.5 block text-sm font-medium text-foreground"
           >
-            Delivery Address *
+            Delivery Address{" "}
+            <span aria-hidden className="text-destructive">
+              *
+            </span>
           </label>
           <textarea
             id="deliveryAddress"
             value={formData.deliveryAddress}
             onChange={(e) => handleChange("deliveryAddress", e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
             placeholder="Enter your full delivery address"
             disabled={isPending}
           />
         </div>
       </div>
 
-      <div className="border-t border-border pt-6 space-y-4">
-        <h2 className="text-lg font-semibold">Order Summary</h2>
+      <div className="space-y-4 border-t border-border pt-6">
+        <h2 className="font-display text-xl text-foreground">Order Summary</h2>
 
-        <div className="space-y-3 max-h-64 overflow-y-auto">
+        <div className="max-h-64 space-y-3 overflow-y-auto">
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 py-2 border-b border-border/50"
+              className="flex items-center gap-3 border-b border-border/50 py-2"
             >
               <img
                 src={item.products.image}
                 alt={item.products.name}
-                className="w-16 h-16 object-cover rounded-lg"
+                className="h-16 w-16 rounded-xl object-cover"
               />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{item.products.name}</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {item.products.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
                   Qty: {item.quantity} × ETB{" "}
                   {item.products.price.toLocaleString()}
                 </p>
               </div>
-              <p className="font-medium text-right">
+              <p className="text-right text-sm font-medium text-foreground">
                 ETB {(item.products.price * item.quantity).toLocaleString()}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-between text-lg font-semibold border-t border-border pt-4">
-          <span>Total</span>
-          <span>ETB {total.toLocaleString()}</span>
+        <div className="flex justify-between border-t border-border pt-4 text-lg font-semibold">
+          <span className="text-foreground">Total</span>
+          <span className="text-foreground">ETB {total.toLocaleString()}</span>
         </div>
       </div>
 
       {error && (
-        <div className="p-4 rounded-lg bg-red-50 text-red-700 text-sm">
+        <div
+          role="alert"
+          className="rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
+        >
           {error}
         </div>
       )}
@@ -180,15 +199,13 @@ export default function CheckoutForm({ items, total }: CheckoutFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 px-4 bg-black text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex h-14 w-full items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? (
-            <>
-              <span className="inline-flex items-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Placing Order...
-              </span>
-            </>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              Placing Order...
+            </span>
           ) : (
             "Place Order"
           )}

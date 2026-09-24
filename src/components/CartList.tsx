@@ -34,7 +34,8 @@ export default function CartList({
   );
 
   return (
-    <section className="space-y-3 px-5">
+    <section className="space-y-3 px-5 pt-5">
+      <h1 className="mb-4 font-display text-3xl text-foreground">Your Bag</h1>
       {items.map((item) => (
         <CartItem
           key={item.id}

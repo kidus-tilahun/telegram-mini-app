@@ -1,4 +1,7 @@
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
+import Price from "@/components/ui/Price";
+
 interface StickyCheckoutProps {
   total: number;
 }
@@ -15,7 +18,8 @@ export default function StickyCheckout({ total }: StickyCheckoutProps) {
         className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-[0.98]"
         onClick={handleCheckout}
       >
-        Checkout · ${total.toFixed(2)}
+        Checkout · <Price value={total} />
+        <ArrowRight size={16} aria-hidden />
       </button>
     </div>
   );
