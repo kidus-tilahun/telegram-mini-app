@@ -1,6 +1,12 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal } from "lucide-react";
+
+// Debounce so each keystroke no longer triggers a full navigation +
+// server re-render (the previous per-keystroke router.push was a major
+// INP/TBT cost on the shop page).
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function SearchBar() {
   const router = useRouter();
@@ -8,17 +14,28 @@ export default function SearchBar() {
   const searchParams = useSearchParams();
 
   const query = searchParams.get("q") ?? "";
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  function handleSearch(value: string) {
-    const params = new URLSearchParams(searchParams);
+  // Clear any pending debounce on unmount.
+  useEffect(() => {
+    return () => clearTimeout(debounceRef.current);
+  }, []);
 
-    if (value === "") {
-      params.delete("q");
-    } else {
-      params.set("q", value);
-    }
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.value;
 
-    router.push(`${pathname}?${params.toString()}`);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+
+      if (next === "") {
+        params.delete("q");
+      } else {
+        params.set("q", next);
+      }
+
+      router.push(`${pathname}?${params.toString()}`);
+    }, SEARCH_DEBOUNCE_MS);
   }
 
   return (
@@ -33,10 +50,16 @@ export default function SearchBar() {
           aria-hidden
         />
         <input
+          // The input is uncontrolled; key={query} remounts it whenever the
+          // URL query changes externally (back/forward, programmatic
+          // navigation), keeping the field in sync without effect-based
+          // state syncing. While the user types (before the debounced push
+          // lands), the key is stable so typing is never interrupted.
+          key={query}
           id="search"
           type="search"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          defaultValue={query}
+          onChange={handleSearchChange}
           placeholder="Search products…"
           className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />

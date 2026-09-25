@@ -9,9 +9,12 @@ import Price from "@/components/ui/Price";
 
 interface CartItemProps {
   item: CartItem;
-  onIncrease: () => void;
-  onDecrease: () => void;
-  onDelete: () => void;
+  // Handlers receive the item so parents can pass stable (useCallback)
+  // references instead of per-row closures, letting memo() skip rows
+  // whose item did not change.
+  onIncrease: (item: CartItem) => void;
+  onDecrease: (item: CartItem) => void;
+  onDelete: (item: CartItem) => void;
   disabled: boolean;
 }
 
@@ -42,7 +45,7 @@ function CartItemComponent({
 
           <button
             disabled={disabled}
-            onClick={onDelete}
+            onClick={() => onDelete(item)}
             aria-label={`Remove ${item.products.name} from cart`}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -54,7 +57,7 @@ function CartItemComponent({
           <div className="inline-flex items-center rounded-full border border-border bg-surface-elevated">
             <button
               disabled={disabled}
-              onClick={onDecrease}
+              onClick={() => onDecrease(item)}
               aria-label="Decrease quantity"
               className="grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors active:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -67,7 +70,7 @@ function CartItemComponent({
 
             <button
               disabled={disabled}
-              onClick={onIncrease}
+              onClick={() => onIncrease(item)}
               aria-label="Increase quantity"
               className="grid h-10 w-10 place-items-center rounded-full text-foreground transition-colors active:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
             >

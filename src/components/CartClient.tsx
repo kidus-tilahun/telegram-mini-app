@@ -53,6 +53,56 @@ export default function CartClient({
     },
   );
 
+  const deleteItem = useCallback(
+    async (item: CartItem) => {
+      setError(null);
+      setIsMutating(true);
+
+      updateOptimisticItems({
+        type: "delete",
+        id: item.id,
+        item,
+      });
+
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) {
+        setError("Telegram session not ready. Please try again.");
+        // Revert optimistic update by re-adding the item
+        updateOptimisticItems({
+          type: "update",
+          id: item.id,
+          quantity: item.quantity,
+          previousQuantity: 0,
+        });
+        setIsMutating(false);
+        return;
+      }
+
+      try {
+        const result = await removeFromCartAction(item.id, initData);
+        if (!result.success) {
+          setError(result.error);
+          // Revert optimistic update by re-adding the item
+          updateOptimisticItems({
+            type: "update",
+            id: item.id,
+            quantity: item.quantity,
+            previousQuantity: 0,
+          });
+          setIsMutating(false);
+          return;
+        }
+
+        // Success: sync parent state
+        setItems((prev) => prev.filter((i) => i.id !== item.id));
+        setCount((prev) => prev - 1);
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [setItems, setCount, updateOptimisticItems],
+  );
+
   const changeQuantity = useCallback(
     async (item: CartItem, quantity: number) => {
       if (quantity < 1) {
@@ -110,57 +160,18 @@ export default function CartClient({
         setIsMutating(false);
       }
     },
-    [setItems, updateOptimisticItems],
+    [setItems, updateOptimisticItems, deleteItem],
   );
 
-  const deleteItem = useCallback(
-    async (item: CartItem) => {
-      setError(null);
-      setIsMutating(true);
-
-      updateOptimisticItems({
-        type: "delete",
-        id: item.id,
-        item,
-      });
-
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) {
-        setError("Telegram session not ready. Please try again.");
-        // Revert optimistic update by re-adding the item
-        updateOptimisticItems({
-          type: "update",
-          id: item.id,
-          quantity: item.quantity,
-          previousQuantity: 0,
-        });
-        setIsMutating(false);
-        return;
-      }
-
-      try {
-        const result = await removeFromCartAction(item.id, initData);
-        if (!result.success) {
-          setError(result.error);
-          // Revert optimistic update by re-adding the item
-          updateOptimisticItems({
-            type: "update",
-            id: item.id,
-            quantity: item.quantity,
-            previousQuantity: 0,
-          });
-          setIsMutating(false);
-          return;
-        }
-
-        // Success: sync parent state
-        setItems((prev) => prev.filter((i) => i.id !== item.id));
-        setCount((prev) => prev - 1);
-      } finally {
-        setIsMutating(false);
-      }
-    },
-    [setItems, setCount, updateOptimisticItems],
+  // Stable handlers so memoized CartItem rows only re-render when their own
+  // item (or the disabled flag) changes, not on every CartClient render.
+  const handleIncrease = useCallback(
+    (item: CartItem) => changeQuantity(item, item.quantity + 1),
+    [changeQuantity],
+  );
+  const handleDecrease = useCallback(
+    (item: CartItem) => changeQuantity(item, item.quantity - 1),
+    [changeQuantity],
   );
 
   return (
@@ -176,8 +187,8 @@ export default function CartClient({
       <div className="pb-36">
         <CartList
           items={optimisticItems}
-          onIncrease={(item) => changeQuantity(item, item.quantity + 1)}
-          onDecrease={(item) => changeQuantity(item, item.quantity - 1)}
+          onIncrease={handleIncrease}
+          onDecrease={handleDecrease}
           onDelete={deleteItem}
           disabled={isMutating}
         />

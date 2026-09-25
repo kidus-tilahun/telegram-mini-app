@@ -1,6 +1,5 @@
 "use client";
 
-import Script from "next/script";
 import {
   createContext,
   useCallback,
@@ -98,7 +97,7 @@ export default function TelegramProvider({
     }
   }, []);
 
-  // Handle Telegram WebApp initialization when script is ready
+  // Handle Telegram WebApp initialization once the SDK is available
   const initializeWebApp = useCallback(() => {
     if (!mountedRef.current) return;
 
@@ -118,6 +117,35 @@ export default function TelegramProvider({
       void syncTelegramSession();
     }
   }, [syncTelegramSession]);
+
+  // The Telegram SDK script is injected into <head> with
+  // strategy="beforeInteractive" in the root layout, so it is normally
+  // already executed by the time this component mounts. Initialize
+  // immediately when available; otherwise poll briefly (50ms x 40 = up to
+  // 2s) as a fallback for slow networks.
+  useEffect(() => {
+    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const tryInit = () => {
+      if (!mountedRef.current) return;
+      if (window.Telegram?.WebApp) {
+        initializeWebApp();
+        return;
+      }
+      attempts++;
+      if (attempts < 40) {
+        timer = setTimeout(tryInit, 50);
+      } else {
+        setSyncStatus("failed");
+      }
+    };
+
+    tryInit();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [initializeWebApp]);
 
   // Set up polling/retry for initData after script loads
   useEffect(() => {
@@ -193,25 +221,15 @@ export default function TelegramProvider({
     };
   }, []);
 
-  function handleScriptLoad() {
-    // Initialize WebApp when script loads
-    initializeWebApp();
-  }
-
   // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({ syncStatus }), [syncStatus]);
 
   return (
     <TelegramSyncContext.Provider value={contextValue}>
-      <Script
-        src="https://telegram.org/js/telegram-web-app.js"
-        strategy="afterInteractive"
-        onLoad={handleScriptLoad}
-      />
       {children}
       {syncStatus === "failed" && (
         <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-center bg-red-50 px-4 py-2 text-sm text-red-700 shadow-md">
-          <span>Couldn't connect to Telegram, pull to refresh</span>
+          <span>Unable to connect to Telegram, pull to refresh</span>
         </div>
       )}
     </TelegramSyncContext.Provider>

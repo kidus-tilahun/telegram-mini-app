@@ -10,11 +10,19 @@ export default function HeroBanner({ heroImageUrl }: HeroBannerProps) {
   return (
     <section className="px-5 pt-2 animate-fade-up">
       <div className="relative overflow-hidden rounded-3xl bg-secondary shadow-[var(--shadow-soft)]">
+        {/*
+          LCP element: `priority` renders the <img> without loading="lazy"
+          and `fetchPriority="high"` makes the browser fetch it ahead of
+          lower-priority resources, cutting LCP on the home page.
+        */}
         <Image
           src={heroImageUrl}
           alt="Model in flowing silk dress from the Spring Atelier collection"
           width={1280}
           height={1600}
+          priority
+          fetchPriority="high"
+          sizes="448px"
           className="h-[420px] w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />

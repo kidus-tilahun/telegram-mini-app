@@ -34,13 +34,20 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
           <span>Back</span>
         </Link>
       </header>
+      {/*
+        LCP element on the product page: the main image sits above the fold,
+        so it must load eagerly with high fetch priority (was lazy-loaded,
+        which delayed LCP until after scroll/interaction).
+      */}
       <Image
         src={product.image}
         alt={product.name}
         width={800}
         height={1000}
+        priority
+        fetchPriority="high"
+        sizes="448px"
         className="aspect-[4/5] w-full shrink-0 snap-center object-cover"
-        loading="lazy"
       />
       <article className="px-5 pt-6 animate-fade-up space-y-4">
         <div>
